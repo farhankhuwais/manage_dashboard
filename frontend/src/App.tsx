@@ -134,14 +134,24 @@ type TableColumn = {
   get: (m: Member) => string | number | null | undefined;
 };
 
-const TABLE_COLUMNS: TableColumn[] = FORM_SECTIONS.flatMap((section) =>
-  section.fields.map((f) => {
-    if (f.type === "name") return { label: "Nama Lengkap", get: (m) => m.name };
-    if (f.type === "status") return { label: "Status", badge: true, get: (m) => m.status };
-    if (f.type === "statusAnggota") return { label: "Status Anggota", get: (m) => m.statusAnggota ?? "Jemaat" };
-    return { label: f.label, get: (m) => (m as any)[f.key] };
-  })
-);
+const TABLE_COLUMNS: TableColumn[] = (() => {
+  const cols: TableColumn[] = FORM_SECTIONS.flatMap((section) =>
+    section.fields.map((f): TableColumn => {
+      if (f.type === "name") return { label: "Nama Lengkap", get: (m) => m.name };
+      if (f.type === "status") return { label: "Status", badge: true, get: (m) => m.status };
+      if (f.type === "statusAnggota") return { label: "Status Anggota", get: (m) => m.statusAnggota ?? "Jemaat" };
+      return { label: f.label, get: (m) => (m as any)[f.key] };
+    })
+  );
+  // Tabel: buang "Status Posisi", pindah "Status" ke pojok kanan (sebelum Aksi)
+  const withoutPosisi = cols.filter((c) => c.label !== "Status Posisi");
+  const statusIdx = withoutPosisi.findIndex((c) => c.badge);
+  if (statusIdx !== -1) {
+    const [statusCol] = withoutPosisi.splice(statusIdx, 1);
+    withoutPosisi.push(statusCol);
+  }
+  return withoutPosisi;
+})();
 
 const statusBadgeClass = (status?: string) =>
   status === "Aktif"
