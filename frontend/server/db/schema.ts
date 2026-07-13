@@ -11,6 +11,7 @@ export const members = pgTable("members", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   status: text("status").notNull(),
+  statusAnggota: text("status_anggota"),
   noUrut: integer("no_urut"),
   statusPosisi: text("status_posisi"),
   komisi: text("komisi"),

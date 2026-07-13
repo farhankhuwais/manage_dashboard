@@ -14,6 +14,7 @@ export const db = drizzle(pool, { schema });
 // sehingga kolom kebuat di DB yg benar tanpa perlu akses DB secara manual.
 const MEMBER_COLUMNS: [string, string][] = [
   ["no_urut", "integer"],
+  ["status_anggota", "text"],
   ["status_posisi", "text"],
   ["komisi", "text"],
   ["tempat_lahir", "text"],

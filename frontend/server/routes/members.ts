@@ -21,7 +21,7 @@ router.get("/", async (req, res) => {
 });
 
 const TEXT_FIELDS = [
-  "statusPosisi", "komisi", "tempatLahir", "jenisKelamin", "wargaNegara",
+  "statusAnggota", "statusPosisi", "komisi", "tempatLahir", "jenisKelamin", "wargaNegara",
   "statusPernikahan", "golonganDarah", "nik", "alamatDomisili", "kota",
   "noTelp", "pekerjaan", "pendidikanTerakhir", "penyerahanAnak",
   "baptisSidi", "atestasi", "asalGereja",

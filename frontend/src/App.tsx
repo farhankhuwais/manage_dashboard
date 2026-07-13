@@ -9,6 +9,7 @@ interface Member {
   id: number;
   name: string;
   status: string;
+  statusAnggota?: string | null;
   noUrut?: string | number | null;
   statusPosisi?: string | null;
   komisi?: string | null;
@@ -79,6 +80,7 @@ function MembersPage({ token }: { token: string }) {
   const [members, setMembers] = useState<Member[]>([]);
   const [name, setName] = useState('');
   const [status, setStatus] = useState('Aktif');
+  const [statusAnggota, setStatusAnggota] = useState('Jemaat');
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingMemberId, setEditingMemberId] = useState<number | null>(null);
@@ -128,7 +130,7 @@ function MembersPage({ token }: { token: string }) {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ name, status, ...info }),
+        body: JSON.stringify({ name, status, statusAnggota, ...info }),
       });
       if (res.ok) {
         setName('');
@@ -175,6 +177,7 @@ function MembersPage({ token }: { token: string }) {
     setEditingMemberId(member.id);
     setName(member.name);
     setStatus(member.status);
+    setStatusAnggota(member.statusAnggota ?? 'Jemaat');
     const next: Record<string, string> = {};
     for (const k of ALL_INFO_KEYS) {
       const v = member[k];
@@ -187,6 +190,7 @@ function MembersPage({ token }: { token: string }) {
     setEditingMemberId(null);
     setName('');
     setStatus('Aktif');
+    setStatusAnggota('Jemaat');
     setInfo({});
   };
 
@@ -215,6 +219,14 @@ function MembersPage({ token }: { token: string }) {
               <option value="Aktif">Aktif</option>
               <option value="Tidak Aktif">Tidak Aktif</option>
               <option value="Pindah">Pindah</option>
+            </select>
+            <select
+              value={statusAnggota}
+              onChange={(e) => setStatusAnggota(e.target.value)}
+              className="px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 bg-white transition-all min-w-[150px]"
+            >
+              <option value="Jemaat">Jemaat</option>
+              <option value="Simpatisan">Simpatisan</option>
             </select>
             <div className="flex gap-2">
               <button
@@ -300,6 +312,7 @@ function MembersPage({ token }: { token: string }) {
                   <th className="py-4 px-6 font-semibold text-slate-600 text-sm">No</th>
                   <th className="py-4 px-6 font-semibold text-slate-600 text-sm">Nama Jemaat</th>
                   <th className="py-4 px-6 font-semibold text-slate-600 text-sm">Status</th>
+                  <th className="py-4 px-6 font-semibold text-slate-600 text-sm">Status Anggota</th>
                   <th className="py-4 px-6 font-semibold text-slate-600 text-sm">Status Posisi</th>
                   <th className="py-4 px-6 font-semibold text-slate-600 text-sm">Komisi</th>
                   <th className="py-4 px-6 font-semibold text-slate-600 text-sm">JK</th>
@@ -314,7 +327,7 @@ function MembersPage({ token }: { token: string }) {
               <tbody>
                 {members.length === 0 ? (
                   <tr>
-                    <td colSpan={12} className="py-12 text-center text-slate-400">
+                    <td colSpan={13} className="py-12 text-center text-slate-400">
                       Belum ada data jemaat yang terdaftar.
                     </td>
                   </tr>
@@ -335,8 +348,9 @@ function MembersPage({ token }: { token: string }) {
                         >
                           {m.status}
                         </span>
-                      </td>
-                      <td className="py-4 px-6 text-slate-600">{m.statusPosisi || '-'}</td>
+                       </td>
+                       <td className="py-4 px-6 text-slate-600">{m.statusAnggota || '-'}</td>
+                       <td className="py-4 px-6 text-slate-600">{m.statusPosisi || '-'}</td>
                       <td className="py-4 px-6 text-slate-600">{m.komisi || '-'}</td>
                       <td className="py-4 px-6 text-slate-600">{m.jenisKelamin || '-'}</td>
                       <td className="py-4 px-6 text-slate-600">{m.tanggalLahir || '-'}</td>
