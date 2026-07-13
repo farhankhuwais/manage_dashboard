@@ -37,8 +37,6 @@ const buildExtra = (body: Record<string, unknown>) => {
   const extra: Record<string, string | number | null> = {};
   for (const f of TEXT_FIELDS) extra[f] = strOrNull(body[f]);
   for (const f of DATE_FIELDS) extra[f] = strOrNull(body[f]);
-  const n = Number(body.noUrut);
-  extra.noUrut = Number.isInteger(n) ? n : null;
   return extra;
 };
 

@@ -36,7 +36,6 @@ interface Member {
 }
 
 const INFO_TEXT_FIELDS: { key: keyof Member; label: string; full?: boolean; type?: string }[] = [
-  { key: "noUrut", label: "No. Urut", type: "number" },
   { key: "tempatLahir", label: "Tempat Lahir" },
   { key: "nik", label: "NIK" },
   { key: "noTelp", label: "No. Telp" },
@@ -83,7 +82,6 @@ const FORM_SECTIONS: { title: string; fields: FormField[] }[] = [
       { type: "select", key: "komisi", label: "Komisi", options: ["Anak", "Youth", "Pemuda", "Muda", "Dewasa", "Usin", "non"] },
       { type: "name" },
       { type: "status" },
-      { type: "text", key: "noUrut", label: "No. Urut", number: true },
       { type: "select", key: "statusPosisi", label: "Status Posisi", options: ["Jumlah Jemaat", "Kepala Keluarga", "Warga Gereja"] },
     ],
   },
@@ -426,7 +424,7 @@ function MembersPage({ token }: { token: string }) {
                 ) : (
                   members.map((m, i) => (
                     <tr key={m.id} className="border-b border-slate-50 hover:bg-blue-50/30 transition-colors group">
-                      <td className="py-4 px-6 text-slate-500">{m.noUrut ?? i + 1}</td>
+                      <td className="py-4 px-6 text-slate-500">{i + 1}</td>
                       {TABLE_COLUMNS.map((c) => (
                         <td key={c.label} className="py-4 px-6 text-slate-600 whitespace-nowrap">
                           {c.badge ? (
