@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Users, ReceiptText, LogOut, LayoutDashboard, Menu, X, Trash2, ShieldCheck, Landmark } from 'lucide-react';
+import { Users, ReceiptText, LogOut, LayoutDashboard, Menu, X, Trash2, ShieldCheck, Landmark, Search } from 'lucide-react';
 import DuesPage from './DuesPage';
 import LoginPage from './LoginPage';
 import UsersPage from './UsersPage';
@@ -162,6 +162,22 @@ function MembersPage({ token }: { token: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingMemberId, setEditingMemberId] = useState<number | null>(null);
   const [info, setInfo] = useState<Record<string, string>>({});
+  const [search, setSearch] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [filterAnggota, setFilterAnggota] = useState('');
+  const [filterKomisi, setFilterKomisi] = useState('');
+
+  const filtered = members.filter((m) => {
+    const q = search.trim().toLowerCase();
+    if (q) {
+      const hay = `${m.name} ${m.nik ?? ''} ${m.noTelp ?? ''}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    if (filterStatus && m.status !== filterStatus) return false;
+    if (filterAnggota && (m.statusAnggota ?? 'Jemaat') !== filterAnggota) return false;
+    if (filterKomisi && m.komisi !== filterKomisi) return false;
+    return true;
+  });
 
   const setField = (k: string, v: string) => setInfo((p) => ({ ...p, [k]: v }));
 
@@ -397,7 +413,49 @@ function MembersPage({ token }: { token: string }) {
           <LayoutDashboard className="w-5 h-5 text-blue-500" />
           Daftar Jemaat
         </h2>
-        
+
+        <div className="flex flex-col md:flex-row gap-3 mb-5">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Cari nama, NIK, atau No. Telp..."
+              className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 text-sm bg-white"
+            />
+          </div>
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 bg-white"
+          >
+            <option value="">Semua Status</option>
+            <option value="Aktif">Aktif</option>
+            <option value="Pindah">Pindah</option>
+            <option value="Non-Aktif">Non-Aktif</option>
+          </select>
+          <select
+            value={filterAnggota}
+            onChange={(e) => setFilterAnggota(e.target.value)}
+            className="px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 bg-white"
+          >
+            <option value="">Semua Status Anggota</option>
+            <option value="Jemaat">Jemaat</option>
+            <option value="Simpatisan">Simpatisan</option>
+          </select>
+          <select
+            value={filterKomisi}
+            onChange={(e) => setFilterKomisi(e.target.value)}
+            className="px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 bg-white"
+          >
+            <option value="">Semua Komisi</option>
+            {["Anak", "Youth", "Pemuda", "Muda", "Dewasa", "Usin", "non"].map((o) => (
+              <option key={o} value={o}>{o}</option>
+            ))}
+          </select>
+        </div>
+
         {loading ? (
           <div className="py-12 flex justify-center">
             <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
@@ -421,8 +479,14 @@ function MembersPage({ token }: { token: string }) {
                       Belum ada data jemaat yang terdaftar.
                     </td>
                   </tr>
+                ) : filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={TABLE_COLUMNS.length + 2} className="py-12 text-center text-slate-400">
+                      Tidak ada jemaat yang cocok dengan pencarian/filter.
+                    </td>
+                  </tr>
                 ) : (
-                  members.map((m, i) => (
+                  filtered.map((m, i) => (
                     <tr key={m.id} className="border-b border-slate-50 hover:bg-blue-50/30 transition-colors group">
                       <td className="py-4 px-6 text-slate-500">{i + 1}</td>
                       {TABLE_COLUMNS.map((c) => (
