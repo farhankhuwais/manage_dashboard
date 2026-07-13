@@ -231,7 +231,7 @@ export default function DuesPage({ token }: { token: string }) {
         </div>
         <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm flex flex-col justify-center items-center text-center">
            <Coins className="w-8 h-8 text-amber-500 mb-2" />
-           <p className="text-slate-500 text-sm">Gunakan form di bawah untuk mencatat kas masuk mingguan.</p>
+           <p className="text-slate-500 text-sm">Gunakan form di bawah untuk mencatat persembahan masuk mingguan.</p>
         </div>
       </div>
 

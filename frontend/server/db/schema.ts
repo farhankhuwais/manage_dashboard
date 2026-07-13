@@ -10,7 +10,30 @@ export const users = pgTable("users", {
 export const members = pgTable("members", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  status: text("status").notNull()
+  status: text("status").notNull(),
+  noUrut: integer("no_urut"),
+  statusPosisi: text("status_posisi"),
+  komisi: text("komisi"),
+  tempatLahir: text("tempat_lahir"),
+  tanggalLahir: date("tanggal_lahir"),
+  jenisKelamin: text("jenis_kelamin"),
+  wargaNegara: text("warga_negara"),
+  statusPernikahan: text("status_pernikahan"),
+  tanggalNikah: date("tanggal_nikah"),
+  golonganDarah: text("golongan_darah"),
+  nik: text("nik"),
+  alamatDomisili: text("alamat_domisili"),
+  kota: text("kota"),
+  noTelp: text("no_telp"),
+  pekerjaan: text("pekerjaan"),
+  pendidikanTerakhir: text("pendidikan_terakhir"),
+  penyerahanAnak: text("penyerahan_anak"),
+  penyerahanAnakTgl: date("penyerahan_anak_tgl"),
+  baptisSidi: text("baptis_sidi"),
+  baptisSidiTgl: date("baptis_sidi_tgl"),
+  atestasi: text("atestasi"),
+  atestasiTgl: date("atestasi_tgl"),
+  asalGereja: text("asal_gereja")
 });
 
 export const offerings = pgTable("offerings", {

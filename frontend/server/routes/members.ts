@@ -19,6 +19,28 @@ router.get("/", async (req, res) => {
   }
 });
 
+const TEXT_FIELDS = [
+  "statusPosisi", "komisi", "tempatLahir", "jenisKelamin", "wargaNegara",
+  "statusPernikahan", "golonganDarah", "nik", "alamatDomisili", "kota",
+  "noTelp", "pekerjaan", "pendidikanTerakhir", "penyerahanAnak",
+  "baptisSidi", "atestasi", "asalGereja",
+];
+const DATE_FIELDS = [
+  "tanggalLahir", "tanggalNikah", "penyerahanAnakTgl", "baptisSidiTgl", "atestasiTgl",
+];
+
+const strOrNull = (v: unknown): string | null =>
+  typeof v === "string" && v.trim() ? v.trim() : null;
+
+const buildExtra = (body: Record<string, unknown>) => {
+  const extra: Record<string, string | number | null> = {};
+  for (const f of TEXT_FIELDS) extra[f] = strOrNull(body[f]);
+  for (const f of DATE_FIELDS) extra[f] = strOrNull(body[f]);
+  const n = Number(body.noUrut);
+  extra.noUrut = Number.isInteger(n) ? n : null;
+  return extra;
+};
+
 router.post("/", async (req, res) => {
   const { name, status } = req.body;
   if (typeof name !== "string" || !name.trim() || typeof status !== "string" || !status.trim()) {
@@ -26,7 +48,7 @@ router.post("/", async (req, res) => {
   }
 
   try {
-    await db.insert(members).values({ name: name.trim(), status: status.trim() });
+    await db.insert(members).values({ name: name.trim(), status: status.trim(), ...buildExtra(req.body) });
     res.status(201).json({ message: "Jemaat ditambahkan" });
   } catch (error) {
     res.status(500).json({ error: "Gagal menambahkan jemaat" });
@@ -62,7 +84,7 @@ router.put("/:id", async (req, res) => {
   try {
     const updated = await db
       .update(members)
-      .set({ name: name.trim(), status: status.trim() })
+      .set({ name: name.trim(), status: status.trim(), ...buildExtra(req.body) })
       .where(eq(members.id, id))
       .returning();
     if (updated.length === 0) {
