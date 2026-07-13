@@ -1,9 +1,10 @@
 import express from "express";
-import authRoutes from "./routes/auth";
-import membersRoutes from "./routes/members";
-import duesRoutes from "./routes/dues";
-import usersRoutes from "./routes/users";
-import { authenticateToken } from "./middleware/authMiddleware";
+import authRoutes from "./routes/auth.js";
+import membersRoutes from "./routes/members.js";
+import duesRoutes from "./routes/dues.js";
+import usersRoutes from "./routes/users.js";
+import offeringsRoutes from "./routes/offerings.js";
+import { authenticateToken } from "./middleware/authMiddleware.js";
 
 const app = express();
 app.use(express.json());
@@ -63,6 +64,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/members", authenticateToken, membersRoutes);
 app.use("/api/dues", authenticateToken, duesRoutes);
 app.use("/api/users", authenticateToken, usersRoutes);
+app.use("/api/offerings", authenticateToken, offeringsRoutes);
 
 const PORT = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'production') {

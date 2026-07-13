@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Users, ReceiptText, LogOut, LayoutDashboard, Menu, X, Trash2, ShieldCheck } from 'lucide-react';
+import { Users, ReceiptText, LogOut, LayoutDashboard, Menu, X, Trash2, ShieldCheck, Landmark } from 'lucide-react';
 import DuesPage from './DuesPage';
 import LoginPage from './LoginPage';
 import UsersPage from './UsersPage';
+import OfferingsPage from './OfferingsPage';
 
 interface Member {
   id: number;
@@ -242,7 +243,7 @@ function MembersPage({ token }: { token: string }) {
 
 function App() {
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
-  const [activeTab, setActiveTab] = useState<'members' | 'dues' | 'users'>('members');
+  const [activeTab, setActiveTab] = useState<'members' | 'dues' | 'users' | 'offerings'>('members');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Helper to get role from token
@@ -326,6 +327,18 @@ function App() {
             Pencatatan Persembahan
           </button>
 
+          <button
+            onClick={() => { setActiveTab('offerings'); setIsMobileMenuOpen(false); }}
+            className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 ${
+              activeTab === 'offerings'
+                ? 'bg-emerald-600/10 text-emerald-400 font-semibold'
+                : 'hover:bg-slate-800 hover:text-white'
+            }`}
+          >
+            <Landmark className={`w-5 h-5 ${activeTab === 'offerings' ? 'text-emerald-500' : ''}`} />
+            Buku Kas Umum
+          </button>
+
           {userRole === 'admin' && (
             <button
               onClick={() => { setActiveTab('users'); setIsMobileMenuOpen(false); }}
@@ -360,6 +373,7 @@ function App() {
             <h2 className="text-3xl font-bold text-slate-900 tracking-tight">
               {activeTab === 'members' && 'Manajemen Jemaat'}
               {activeTab === 'dues' && 'Pencatatan Persembahan'}
+              {activeTab === 'offerings' && 'Buku Kas Umum'}
               {activeTab === 'users' && 'Manajemen Akses Admin'}
             </h2>
             <p className="text-slate-500 mt-1">
@@ -370,6 +384,7 @@ function App() {
           <div className="relative">
             {activeTab === 'members' && <MembersPage token={token} />}
             {activeTab === 'dues' && <DuesPage token={token} />}
+            {activeTab === 'offerings' && <OfferingsPage token={token} />}
             {activeTab === 'users' && userRole === 'admin' && <UsersPage token={token} />}
           </div>
 
