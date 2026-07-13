@@ -19,6 +19,7 @@ export default function DuesPage({ token }: { token: string }) {
   const [dues, setDues] = useState<Due[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
+  const [chartReady, setChartReady] = useState(false);
 
   // Helper to get ISO Week and Year
   const getWeekInfo = (dateString: string) => {
@@ -90,6 +91,17 @@ export default function DuesPage({ token }: { token: string }) {
     fetchData();
   }, [token]);
 
+  // defer chart until window load to avoid forcing layout during initial load
+  useEffect(() => {
+    if (document.readyState === 'complete') {
+      setChartReady(true);
+      return;
+    }
+    const onLoad = () => setChartReady(true);
+    window.addEventListener('load', onLoad);
+    return () => window.removeEventListener('load', onLoad);
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!memberId || isSubmitting) return;
@@ -156,6 +168,7 @@ export default function DuesPage({ token }: { token: string }) {
             Grafik Tren Persembahan Tahun {year}
           </h2>
           <div className="h-[300px] w-full">
+            {chartReady ? (
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
@@ -187,6 +200,7 @@ export default function DuesPage({ token }: { token: string }) {
                 />
               </LineChart>
             </ResponsiveContainer>
+            ) : null}
           </div>
         </div>
       )}
