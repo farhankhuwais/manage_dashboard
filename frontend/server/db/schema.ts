@@ -12,6 +12,8 @@ export const members = pgTable("members", {
   name: text("name").notNull(),
   status: text("status").notNull(),
   statusAnggota: text("status_anggota"),
+  statusWarga: text("status_warga"),
+  statusKeluarga: text("status_keluarga"),
   noUrut: integer("no_urut"),
   statusPosisi: text("status_posisi"),
   komisi: text("komisi"),

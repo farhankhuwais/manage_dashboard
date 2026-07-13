@@ -15,6 +15,8 @@ export const db = drizzle(pool, { schema });
 const MEMBER_COLUMNS: [string, string][] = [
   ["no_urut", "integer"],
   ["status_anggota", "text"],
+  ["status_warga", "text"],
+  ["status_keluarga", "text"],
   ["status_posisi", "text"],
   ["komisi", "text"],
   ["tempat_lahir", "text"],

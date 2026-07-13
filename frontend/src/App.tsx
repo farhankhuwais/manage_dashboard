@@ -10,6 +10,8 @@ interface Member {
   name: string;
   status: string;
   statusAnggota?: string | null;
+  statusWarga?: string | null;
+  statusKeluarga?: string | null;
   noUrut?: string | number | null;
   statusPosisi?: string | null;
   komisi?: string | null;
@@ -53,6 +55,8 @@ const INFO_DATE_FIELDS: { key: keyof Member; label: string }[] = [
 
 const INFO_SELECT_FIELDS: { key: keyof Member; label: string; options: string[] }[] = [
   { key: "statusPosisi", label: "Status Posisi", options: ["Jumlah Jemaat", "Kepala Keluarga", "Warga Gereja"] },
+  { key: "statusWarga", label: "Status Warga", options: ["Warga Gereja", "Bukan Warga Gereja"] },
+  { key: "statusKeluarga", label: "Status Keluarga", options: ["Kepala Keluarga"] },
   { key: "komisi", label: "Komisi", options: ["Anak", "Youth", "Pemuda", "Muda", "Dewasa", "Usin", "non"] },
   { key: "jenisKelamin", label: "Jenis Kelamin", options: ["Laki-Laki", "Perempuan"] },
   { key: "wargaNegara", label: "Warga Negara", options: ["WNI", "WNA"] },
@@ -81,6 +85,8 @@ const FORM_SECTIONS: { title: string; fields: FormField[] }[] = [
       { type: "statusAnggota" },
       { type: "select", key: "komisi", label: "Komisi", options: ["Anak", "Youth", "Pemuda", "Muda", "Dewasa", "Usin", "non"] },
       { type: "name" },
+      { type: "select", key: "statusWarga", label: "Status Warga", options: ["Warga Gereja", "Bukan Warga Gereja"] },
+      { type: "select", key: "statusKeluarga", label: "Status Keluarga", options: ["Kepala Keluarga"] },
       { type: "status" },
       { type: "select", key: "statusPosisi", label: "Status Posisi", options: ["Jumlah Jemaat", "Kepala Keluarga", "Warga Gereja"] },
     ],
