@@ -14,6 +14,7 @@ export default function UsersPage({ token }: { token: string }) {
   const [role, setRole] = useState('user');
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingUserId, setEditingUserId] = useState<number | null>(null);
 
   const fetchUsers = async () => {
     try {
@@ -40,7 +41,8 @@ export default function UsersPage({ token }: { token: string }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !password || isSubmitting) return;
+    if (!email.trim() || isSubmitting) return; // Password optional in edit mode
+    if (!editingUserId && !password) return; // Password required for new accounts
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
@@ -50,8 +52,11 @@ export default function UsersPage({ token }: { token: string }) {
 
     setIsSubmitting(true);
     try {
-      const res = await fetch('/api/users', {
-        method: 'POST',
+      const url = editingUserId ? `/api/users/${editingUserId}` : '/api/users';
+      const method = editingUserId ? 'PUT' : 'POST';
+      
+      const res = await fetch(url, {
+        method,
         headers: { 
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
@@ -62,17 +67,32 @@ export default function UsersPage({ token }: { token: string }) {
         setEmail('');
         setPassword('');
         setRole('user');
+        setEditingUserId(null);
         fetchUsers();
-        alert('Akun berhasil dibuat!');
+        alert(editingUserId ? 'Akun berhasil diperbarui!' : 'Akun berhasil dibuat!');
       } else {
         const errorData = await res.json();
-        alert(errorData.error || 'Terjadi kesalahan saat membuat akun');
+        alert(errorData.error || 'Terjadi kesalahan saat memproses akun');
       }
     } catch (error) {
-      console.error('Failed to add user', error);
+      console.error('Failed to save user', error);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleEditClick = (user: User) => {
+    setEditingUserId(user.id);
+    setEmail(user.email);
+    setRole(user.role);
+    setPassword('');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingUserId(null);
+    setEmail('');
+    setRole('user');
+    setPassword('');
   };
 
   return (
@@ -93,7 +113,7 @@ export default function UsersPage({ token }: { token: string }) {
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 sticky top-24">
             <h2 className="text-lg font-bold text-slate-800 mb-6 border-b pb-4 flex items-center gap-2">
               <UserPlus className="w-5 h-5 text-indigo-500" />
-              Buat Akun Baru
+              {editingUserId ? 'Edit Akun Pengurus' : 'Buat Akun Baru'}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
@@ -114,8 +134,8 @@ export default function UsersPage({ token }: { token: string }) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-                  required
-                  placeholder="Minimal 6 karakter"
+                  required={!editingUserId}
+                  placeholder={editingUserId ? "Kosongkan jika tak diubah" : "Minimal 6 karakter"}
                 />
               </div>
 
@@ -131,17 +151,28 @@ export default function UsersPage({ token }: { token: string }) {
                 </select>
               </div>
 
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full py-3.5 mt-2 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-500/30 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
-              >
-                {isSubmitting ? (
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                ) : (
-                  'Buat Akun'
+              <div className="pt-2 flex flex-col gap-3">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full py-3.5 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-500/30 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
+                >
+                  {isSubmitting ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  ) : (
+                    editingUserId ? 'Simpan Perubahan' : 'Buat Akun'
+                  )}
+                </button>
+                {editingUserId && (
+                  <button
+                    type="button"
+                    onClick={handleCancelEdit}
+                    className="w-full py-3.5 bg-white text-slate-700 border border-slate-200 font-semibold rounded-xl hover:bg-slate-50 transition-all active:scale-[0.98]"
+                  >
+                    Batal Edit
+                  </button>
                 )}
-              </button>
+              </div>
             </form>
           </div>
         </div>
@@ -166,6 +197,7 @@ export default function UsersPage({ token }: { token: string }) {
                       <th className="py-4 px-6 font-semibold text-slate-600 text-sm">ID</th>
                       <th className="py-4 px-6 font-semibold text-slate-600 text-sm">Email Akun</th>
                       <th className="py-4 px-6 font-semibold text-slate-600 text-sm">Hak Akses</th>
+                      <th className="py-4 px-6 font-semibold text-slate-600 text-sm text-right">Aksi</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -188,6 +220,14 @@ export default function UsersPage({ token }: { token: string }) {
                             }`}>
                               {u.role === 'admin' ? 'Super Admin' : 'Pengurus (User)'}
                             </span>
+                          </td>
+                          <td className="py-4 px-6 text-right">
+                            <button
+                              onClick={() => handleEditClick(u)}
+                              className="text-sm px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-colors"
+                            >
+                              Edit
+                            </button>
                           </td>
                         </tr>
                       ))

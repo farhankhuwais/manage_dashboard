@@ -53,4 +53,35 @@ router.post("/", requireAdmin, async (req: AuthRequest, res) => {
   }
 });
 
+// PUT /api/users/:id - Edit akun pengurus
+router.put("/:id", requireAdmin, async (req: AuthRequest, res) => {
+  const { id } = req.params;
+  const { email, password, role } = req.body;
+  
+  if (!email || !role) {
+    return res.status(400).json({ error: "Email dan role tidak boleh kosong" });
+  }
+
+  try {
+    // Cek apakah email sudah dipakai oleh user lain
+    const existing = await db.select().from(users).where(eq(users.email, email));
+    if (existing.length > 0 && existing[0]!.id !== Number(id)) {
+      return res.status(400).json({ error: "Email sudah digunakan oleh akun lain" });
+    }
+
+    const updateData: any = { email, role };
+
+    // Jika password diisi, hash password baru
+    if (password && password.trim() !== '') {
+      const salt = await bcrypt.genSalt(10);
+      updateData.passwordHash = await bcrypt.hash(password, salt);
+    }
+
+    await db.update(users).set(updateData).where(eq(users.id, Number(id)));
+    res.json({ message: "Akun pengurus berhasil diperbarui" });
+  } catch (error) {
+    res.status(500).json({ error: "Gagal memperbarui akun" });
+  }
+});
+
 export default router;
