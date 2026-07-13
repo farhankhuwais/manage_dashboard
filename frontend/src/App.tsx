@@ -173,6 +173,27 @@ const KEY_TO_LABEL: Record<string, string> = Object.fromEntries(
   Object.entries(LABEL_TO_KEY).map(([l, k]) => [k, l]),
 );
 
+const SECTION_COLORS = ['2563EB', '059669', '7C3AED', 'D97706'];
+
+const HEADER_LABEL_COLOR: Record<string, string> = (() => {
+  const map: Record<string, string> = {};
+  FORM_SECTIONS.forEach((section, i) => {
+    const color = SECTION_COLORS[i % SECTION_COLORS.length];
+    for (const f of section.fields) {
+      const label =
+        f.type === 'name'
+          ? 'Nama Lengkap'
+          : f.type === 'status'
+            ? 'Status'
+            : f.type === 'statusAnggota'
+              ? 'Status Anggota'
+              : f.label;
+      map[label] = color;
+    }
+  });
+  return map;
+})();
+
 const statusBadgeClass = (status?: string) =>
   status === "Aktif"
     ? "bg-emerald-50 text-emerald-700 border-emerald-200"
@@ -357,11 +378,13 @@ function MembersPage({ token }: { token: string }) {
     for (let c = range.s.c; c <= range.e.c; c++) {
       const cell = ws[XLSX.utils.encode_cell({ r: 0, c })];
       if (cell) {
+        const label = headers[c];
+        const fill = label && HEADER_LABEL_COLOR[label] ? HEADER_LABEL_COLOR[label] : '1E293B';
         cell.s = {
           font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 10 },
-          fill: { fgColor: { rgb: '2563EB' } },
+          fill: { fgColor: { rgb: fill } },
           alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
-          border: { bottom: { style: 'thin', color: { rgb: '1E293B' } } },
+          border: { bottom: { style: 'medium', color: { rgb: '0F172A' } } },
         };
       }
     }
