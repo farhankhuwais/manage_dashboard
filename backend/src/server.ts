@@ -1,7 +1,8 @@
 import express from "express";
-import authRouter from "./routes/auth";
-import membersRouter from "./routes/members";
-import duesRouter from "./routes/dues";
+import authRoutes from "./routes/auth";
+import membersRoutes from "./routes/members";
+import duesRoutes from "./routes/dues";
+import usersRoutes from "./routes/users";
 import { authenticateToken } from "./middleware/authMiddleware";
 
 const app = express();
@@ -11,9 +12,10 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "OK" });
 });
 
-app.use("/api/auth", authRouter);
-app.use("/api/members", authenticateToken, membersRouter);
-app.use("/api/dues", authenticateToken, duesRouter);
+app.use("/api/auth", authRoutes);
+app.use("/api/members", authenticateToken, membersRoutes);
+app.use("/api/dues", authenticateToken, duesRoutes);
+app.use("/api/users", authenticateToken, usersRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Users, ReceiptText, LogOut, LayoutDashboard, Menu, X, Trash2 } from 'lucide-react';
+import { Users, ReceiptText, LogOut, LayoutDashboard, Menu, X, Trash2, ShieldCheck } from 'lucide-react';
 import DuesPage from './DuesPage';
 import LoginPage from './LoginPage';
+import UsersPage from './UsersPage';
 
 interface Member {
   id: number;
@@ -203,8 +204,21 @@ function MembersPage({ token }: { token: string }) {
 
 function App() {
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
-  const [activeTab, setActiveTab] = useState<'members' | 'dues'>('members');
+  const [activeTab, setActiveTab] = useState<'members' | 'dues' | 'users'>('members');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Helper to get role from token
+  const getUserRole = (t: string | null) => {
+    if (!t) return null;
+    try {
+      const payload = JSON.parse(atob(t.split('.')[1]));
+      return payload.role;
+    } catch {
+      return null;
+    }
+  };
+
+  const userRole = getUserRole(token);
 
   if (!token) {
     return (
@@ -273,6 +287,20 @@ function App() {
             <ReceiptText className={`w-5 h-5 ${activeTab === 'dues' ? 'text-blue-500' : ''}`} />
             Pencatatan Persembahan
           </button>
+
+          {userRole === 'admin' && (
+            <button
+              onClick={() => { setActiveTab('users'); setIsMobileMenuOpen(false); }}
+              className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 ${
+                activeTab === 'users'
+                  ? 'bg-blue-600/10 text-blue-400 font-semibold'
+                  : 'hover:bg-slate-800 hover:text-white'
+              }`}
+            >
+              <ShieldCheck className={`w-5 h-5 ${activeTab === 'users' ? 'text-blue-500' : ''}`} />
+              Manajemen Akses
+            </button>
+          )}
         </nav>
 
         <div className="p-4 border-t border-slate-800">
@@ -292,16 +320,19 @@ function App() {
           
           <header className="mb-10 hidden md:block">
             <h2 className="text-3xl font-bold text-slate-900 tracking-tight">
-              {activeTab === 'members' ? 'Manajemen Jemaat' : 'Pencatatan Persembahan'}
+              {activeTab === 'members' && 'Manajemen Jemaat'}
+              {activeTab === 'dues' && 'Pencatatan Persembahan'}
+              {activeTab === 'users' && 'Manajemen Akses Admin'}
             </h2>
             <p className="text-slate-500 mt-1">
-              Kelola data gereja dengan cepat dan aman.
+              {activeTab === 'users' ? 'Kelola akun pengurus sistem ini.' : 'Kelola data gereja dengan cepat dan aman.'}
             </p>
           </header>
 
           <div className="relative">
             {activeTab === 'members' && <MembersPage token={token} />}
             {activeTab === 'dues' && <DuesPage token={token} />}
+            {activeTab === 'users' && userRole === 'admin' && <UsersPage token={token} />}
           </div>
 
         </div>
