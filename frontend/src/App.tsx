@@ -291,7 +291,8 @@ function App() {
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} 
         md:translate-x-0 
         fixed md:sticky top-0 left-0 z-10 
-        w-72 h-screen bg-slate-900 text-slate-300 
+        w-72 h-[100dvh] md:h-screen bg-slate-900 text-slate-300 
+        pt-16 md:pt-0
         transition-transform duration-300 ease-in-out
         flex flex-col shadow-2xl md:shadow-none
       `}>
@@ -354,7 +355,7 @@ function App() {
           )}
         </nav>
 
-        <div className="p-4 border-t border-slate-800">
+        <div className="p-4 border-t border-slate-800 pb-[calc(1rem+env(safe-area-inset-bottom))]">
           <button
             onClick={handleLogout}
             className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-800 text-slate-300 rounded-xl hover:bg-rose-500/10 hover:text-rose-400 transition-colors"
