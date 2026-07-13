@@ -33,10 +33,35 @@ const DATE_FIELDS = [
 const strOrNull = (v: unknown): string | null =>
   typeof v === "string" && v.trim() ? v.trim() : null;
 
+const parseDate = (v: unknown): string | null => {
+  if (v == null) return null;
+  if (v instanceof Date) {
+    return isNaN(v.getTime()) ? null : v.toISOString().slice(0, 10);
+  }
+  if (typeof v === "number") {
+    if (v < 1) return null;
+    const d = new Date((v - 25569) * 86400000);
+    return isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
+  }
+  if (typeof v === "string") {
+    const s = v.trim();
+    if (!s || s === "-") return null;
+    const d = new Date(s);
+    if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+    const m = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+    if (m) {
+      const d2 = new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+      if (!isNaN(d2.getTime())) return d2.toISOString().slice(0, 10);
+    }
+    return null;
+  }
+  return null;
+};
+
 const buildExtra = (body: Record<string, unknown>) => {
   const extra: Record<string, string | number | null> = {};
   for (const f of TEXT_FIELDS) extra[f] = strOrNull(body[f]);
-  for (const f of DATE_FIELDS) extra[f] = strOrNull(body[f]);
+  for (const f of DATE_FIELDS) extra[f] = parseDate(body[f]);
   return extra;
 };
 
@@ -116,7 +141,11 @@ router.post("/bulk", async (req, res) => {
       skipped,
     });
   } catch (error: any) {
-    res.status(500).json({ error: "Gagal import data jemaat", cause: error?.message });
+    res.status(500).json({
+      error: "Gagal import data jemaat",
+      cause: error?.message,
+      detail: error?.cause?.message || error?.code,
+    });
   }
 });
 

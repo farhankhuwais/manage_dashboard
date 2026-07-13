@@ -42,7 +42,7 @@ export default function DuesPage({ token }: { token: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
-  const { week: weekNumber, month: selMonth, year } = getWeekInfo(selectedDate);
+  const { week: weekNumber, year } = getWeekInfo(selectedDate);
   const { week: curWeek, month: curMonth, year: curYear } = getWeekInfo(today);
 
   // Filter chart by month ('all' = full year trend)
@@ -231,7 +231,7 @@ export default function DuesPage({ token }: { token: string }) {
         </div>
         <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm flex flex-col justify-center items-center text-center">
            <Coins className="w-8 h-8 text-amber-500 mb-2" />
-           <p className="text-slate-500 text-sm">Gunakan form di bawah untuk mencatat persembahan masuk mingguan.</p>
+           <p className="text-slate-500 text-sm">Gunakan form di bawah untuk mencatat kas masuk mingguan.</p>
         </div>
       </div>
 
@@ -324,7 +324,7 @@ export default function DuesPage({ token }: { token: string }) {
               {selectedDate && (
                 <div className="bg-blue-50/50 border border-blue-100 p-3 rounded-lg text-sm text-blue-800 flex justify-between items-center">
                   <span>Otomatis dihitung sebagai:</span>
-                  <span className="font-bold">Minggu ke-{weekNumber}, Bulan {BULAN[selMonth]} {year}</span>
+                  <span className="font-bold">Minggu ke-{weekNumber} (per bulan), Tahun {year}</span>
                 </div>
               )}
 
