@@ -1,9 +1,9 @@
 import express from "express";
-import authRoutes from "./routes/auth";
-import membersRoutes from "./routes/members";
-import duesRoutes from "./routes/dues";
-import usersRoutes from "./routes/users";
-import { authenticateToken } from "./middleware/authMiddleware";
+import authRoutes from "./routes/auth.js";
+import membersRoutes from "./routes/members.js";
+import duesRoutes from "./routes/dues.js";
+import usersRoutes from "./routes/users.js";
+import { authenticateToken } from "./middleware/authMiddleware.js";
 
 const app = express();
 app.use(express.json());

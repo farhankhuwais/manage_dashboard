@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { db } from "../db";
-import { weeklyDues } from "../db/schema";
+import { db } from "../db/index.js";
+import { weeklyDues } from "../db/schema.js";
 import { and, eq } from "drizzle-orm";
 
 const router = Router();
