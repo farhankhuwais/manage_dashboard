@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Users, ReceiptText, LogOut, LayoutDashboard, Menu, X, Trash2, ShieldCheck, Landmark, Search } from 'lucide-react';
+import { Users, ReceiptText, LogOut, LayoutDashboard, Menu, X, Trash2, ShieldCheck, Landmark, Search, BarChart3 } from 'lucide-react';
 import DuesPage from './DuesPage';
 import LoginPage from './LoginPage';
 import UsersPage from './UsersPage';
@@ -546,9 +546,111 @@ function MembersPage({ token }: { token: string }) {
   );
 }
 
+function OverviewPage({ token }: { token: string }) {
+  const [members, setMembers] = useState<Member[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchMembers = async () => {
+    try {
+      const res = await fetch('/api/members', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem('token');
+        window.location.reload();
+        return;
+      }
+      const data = await res.json();
+      if (res.ok && Array.isArray(data)) setMembers(data);
+      else setMembers([]);
+    } catch {
+      setMembers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMembers();
+  }, [token]);
+
+  const selOpts = (k: keyof Member) =>
+    INFO_SELECT_FIELDS.find((f) => f.key === k)?.options ?? [];
+
+  const OVERVIEW_FIELDS: { key: keyof Member; label: string; options: string[] }[] = [
+    { key: 'statusWarga', label: 'Status Warga', options: selOpts('statusWarga') },
+    { key: 'statusKeluarga', label: 'Status Keluarga', options: selOpts('statusKeluarga') },
+    { key: 'statusAnggota', label: 'Status Anggota', options: ['Jemaat', 'Simpatisan'] },
+    { key: 'komisi', label: 'Komisi', options: selOpts('komisi') },
+    { key: 'pekerjaan', label: 'Pekerjaan', options: selOpts('pekerjaan') },
+    { key: 'statusPernikahan', label: 'Status Pernikahan', options: selOpts('statusPernikahan') },
+    { key: 'golonganDarah', label: 'Golongan Darah', options: selOpts('golonganDarah') },
+    { key: 'pendidikanTerakhir', label: 'Pendidikan Terakhir', options: selOpts('pendidikanTerakhir') },
+  ];
+
+  const countRows = (key: keyof Member, options: string[]) => {
+    const counts = new Map<string, number>(options.map((o) => [o, 0]));
+    let empty = 0;
+    for (const m of members) {
+      const v = (m as any)[key] as string | null | undefined;
+      if (v == null || v === '') empty++;
+      else counts.set(v, (counts.get(v) ?? 0) + 1);
+    }
+    const rows = options.map((o) => ({ label: o, count: counts.get(o) ?? 0 }));
+    if (empty > 0) rows.push({ label: 'Belum diisi', count: empty });
+    return rows;
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="col-span-full sm:col-span-1 bg-gradient-to-br from-blue-600 to-blue-700 text-white p-5 rounded-2xl shadow">
+          <p className="text-blue-100 text-sm">Total Jemaat Tercatat</p>
+          <p className="text-3xl font-extrabold mt-1">{members.length}</p>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-20 text-slate-400">Memuat data...</div>
+      ) : members.length === 0 ? (
+        <div className="text-center py-20 text-slate-400">Belum ada data jemaat.</div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          {OVERVIEW_FIELDS.map((f) => {
+            const rows = countRows(f.key, f.options);
+            const total = rows.reduce((s, r) => s + r.count, 0);
+            return (
+              <div key={String(f.key)} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-slate-800">{f.label}</h3>
+                  <span className="text-xs text-slate-400">{total}</span>
+                </div>
+                <div className="space-y-2">
+                  {rows.map((r) => (
+                    <div key={r.label} className="flex items-center justify-between text-sm">
+                      <span className="text-slate-600 truncate pr-2">{r.label}</span>
+                      <span
+                        className={`shrink-0 font-semibold rounded-full px-2.5 py-0.5 ${
+                          r.count === 0 ? 'bg-slate-50 text-slate-400' : 'bg-blue-50 text-blue-600'
+                        }`}
+                      >
+                        {r.count}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function App() {
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
-  const [activeTab, setActiveTab] = useState<'members' | 'dues' | 'users' | 'offerings'>('members');
+  const [activeTab, setActiveTab] = useState<'members' | 'dues' | 'users' | 'offerings' | 'overview'>('members');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Helper to get role from token
@@ -627,7 +729,19 @@ function App() {
             <Users className={`w-5 h-5 ${activeTab === 'members' ? 'text-blue-500' : ''}`} />
             Data Jemaat
           </button>
-          
+
+          <button
+            onClick={() => { setActiveTab('overview'); setIsMobileMenuOpen(false); }}
+            className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 ${
+              activeTab === 'overview'
+                ? 'bg-blue-600/10 text-blue-400 font-semibold'
+                : 'hover:bg-slate-800 hover:text-white'
+            }`}
+          >
+            <BarChart3 className={`w-5 h-5 ${activeTab === 'overview' ? 'text-blue-500' : ''}`} />
+            Overview
+          </button>
+
           <button
             onClick={() => { setActiveTab('dues'); setIsMobileMenuOpen(false); }}
             className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 ${
@@ -685,6 +799,7 @@ function App() {
           <header className="mb-10 hidden md:block">
             <h2 className="text-3xl font-bold text-slate-900 tracking-tight">
               {activeTab === 'members' && 'Manajemen Jemaat'}
+              {activeTab === 'overview' && 'Overview Jemaat'}
               {activeTab === 'dues' && 'Pencatatan Persembahan'}
               {activeTab === 'offerings' && 'Buku Kas Umum'}
               {activeTab === 'users' && 'Manajemen Akses Admin'}
@@ -696,6 +811,7 @@ function App() {
 
           <div className="relative">
             {activeTab === 'members' && <MembersPage token={token} />}
+            {activeTab === 'overview' && <OverviewPage token={token} />}
             {activeTab === 'dues' && <DuesPage token={token} />}
             {activeTab === 'offerings' && <OfferingsPage token={token} />}
             {activeTab === 'users' && userRole === 'admin' && <UsersPage token={token} />}
