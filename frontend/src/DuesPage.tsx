@@ -40,6 +40,7 @@ export default function DuesPage({ token }: { token: string }) {
   const [selectedDate, setSelectedDate] = useState<string>(today);
   const [amount, setAmount] = useState<number>(50000);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   const { week: weekNumber, year } = getWeekInfo(selectedDate);
   const { week: curWeek, month: curMonth, year: curYear } = getWeekInfo(today);
@@ -172,6 +173,41 @@ export default function DuesPage({ token }: { token: string }) {
       }
     } catch (error) {
       console.error('Delete error', error);
+    }
+  };
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  const allSelected = dues.length > 0 && selectedIds.length === dues.length;
+  const toggleSelectAll = () => {
+    setSelectedIds(allSelected ? [] : dues.map(d => d.id));
+  };
+
+  const handleBulkDelete = async (ids: number[], confirmMsg: string) => {
+    if (ids.length === 0) return;
+    if (!window.confirm(confirmMsg)) return;
+    try {
+      const res = await fetch('/api/dues', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ ids })
+      });
+      if (res.ok) {
+        setSelectedIds([]);
+        fetchData();
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Gagal menghapus persembahan');
+      }
+    } catch (error) {
+      console.error('Bulk delete error', error);
     }
   };
 
@@ -322,7 +358,25 @@ export default function DuesPage({ token }: { token: string }) {
         {/* Table Panel */}
         <div className="xl:w-2/3">
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 h-full">
-            <h2 className="text-lg font-bold text-slate-800 mb-6">Riwayat Persembahan Masuk</h2>
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+              <h2 className="text-lg font-bold text-slate-800">Riwayat Persembahan Masuk</h2>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleBulkDelete(selectedIds, `Hapus ${selectedIds.length} persembahan terpilih?`)}
+                  disabled={selectedIds.length === 0}
+                  className="px-3 py-1.5 text-sm font-medium rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Hapus Terpilih ({selectedIds.length})
+                </button>
+                <button
+                  onClick={() => handleBulkDelete(dues.map(d => d.id), 'Hapus SEMUA riwayat persembahan? Tindakan tidak bisa dibatalkan.')}
+                  disabled={dues.length === 0}
+                  className="px-3 py-1.5 text-sm font-medium rounded-lg bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Hapus Semua
+                </button>
+              </div>
+            </div>
 
             {loading ? (
               <div className="py-12 flex justify-center">
@@ -331,8 +385,17 @@ export default function DuesPage({ token }: { token: string }) {
             ) : (
               <div className="overflow-x-auto rounded-xl border border-slate-100">
                 <table className="w-full text-left border-collapse">
-                  <thead>
+                   <thead>
                     <tr className="bg-slate-50/80 border-b border-slate-100">
+                      <th className="py-4 px-3 font-semibold text-slate-600 text-sm w-10">
+                        <input
+                          type="checkbox"
+                          checked={allSelected}
+                          onChange={toggleSelectAll}
+                          className="w-4 h-4 accent-rose-600 cursor-pointer"
+                          title="Pilih semua"
+                        />
+                      </th>
                       <th className="py-4 px-6 font-semibold text-slate-600 text-sm">ID</th>
                       <th className="py-4 px-6 font-semibold text-slate-600 text-sm">Jemaat</th>
                       <th className="py-4 px-6 font-semibold text-slate-600 text-sm">Waktu</th>
@@ -343,15 +406,24 @@ export default function DuesPage({ token }: { token: string }) {
                   <tbody>
                     {dues.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="py-12 text-center text-slate-400">
+                        <td colSpan={6} className="py-12 text-center text-slate-400">
                           Belum ada catatan persembahan.
                         </td>
                       </tr>
                     ) : (
                       dues.map((d) => {
                         const member = members.find(m => m.id === d.memberId);
+                        const checked = selectedIds.includes(d.id);
                         return (
-                          <tr key={d.id} className="border-b border-slate-50 hover:bg-blue-50/30 transition-colors">
+                          <tr key={d.id} className={`border-b border-slate-50 transition-colors ${checked ? 'bg-rose-50/40' : 'hover:bg-blue-50/30'}`}>
+                            <td className="py-4 px-3">
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() => toggleSelect(d.id)}
+                                className="w-4 h-4 accent-rose-600 cursor-pointer"
+                              />
+                            </td>
                             <td className="py-4 px-6 text-slate-500 text-sm">#{d.id}</td>
                              <td className="py-4 px-6 font-medium text-slate-700">{member ? member.name : 'Umum'}</td>
                             <td className="py-4 px-6 text-sm text-slate-600">{`Mg ${d.weekNumber}, ${BULAN[new Date(d.date).getMonth()]} ${new Date(d.date).getFullYear()}`}</td>

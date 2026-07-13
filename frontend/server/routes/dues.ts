@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "../db/index";
 import { weeklyDues } from "../db/schema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 
 const router = Router();
 
@@ -75,6 +75,26 @@ router.delete("/:id", async (req, res) => {
       return res.status(404).json({ error: "Data persembahan tidak ditemukan" });
     }
     res.json({ message: "Data persembahan berhasil dihapus" });
+  } catch (error) {
+    res.status(500).json({ error: "Gagal menghapus data persembahan" });
+  }
+});
+
+// DELETE /api/dues - Hapus banyak/semua catatan (bulk)
+router.delete("/", async (req, res) => {
+  const ids = req.body?.ids;
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ error: "Daftar ID tidak valid" });
+  }
+  const clean = ids
+    .filter((x) => Number.isInteger(Number(x)) && Number(x) > 0)
+    .map(Number);
+  if (clean.length === 0) {
+    return res.status(400).json({ error: "Daftar ID tidak valid" });
+  }
+  try {
+    await db.delete(weeklyDues).where(inArray(weeklyDues.id, clean));
+    res.json({ message: "Berhasil menghapus data terpilih" });
   } catch (error) {
     res.status(500).json({ error: "Gagal menghapus data persembahan" });
   }
