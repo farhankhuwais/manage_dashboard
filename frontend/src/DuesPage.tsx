@@ -44,20 +44,36 @@ export default function DuesPage({ token }: { token: string }) {
   const { week: weekNumber, year } = getWeekInfo(selectedDate);
   const { week: curWeek, month: curMonth, year: curYear } = getWeekInfo(today);
 
+  // Filter chart by month ('all' = full year trend)
+  const [selectedMonth, setSelectedMonth] = useState<number | 'all'>('all');
+
   // Aggregating data for chart
-  const chartData = useMemo(() => {
+  const chartData = useMemo<{ name: string; total: number; month?: number; week?: number }[]>(() => {
+    if (selectedMonth === 'all') {
+      const totals = new Map<number, number>();
+      dues.forEach(d => {
+        const dt = d.date ? new Date(d.date) : new Date();
+        if (dt.getFullYear() === year) {
+          const m = dt.getMonth();
+          totals.set(m, (totals.get(m) || 0) + d.amount);
+        }
+      });
+      return Array.from(totals.entries())
+        .map(([m, total]) => ({ name: BULAN[m], total, month: m }))
+        .sort((a, b) => a.month - b.month);
+    }
+    // Specific month: per-week (Mg 1-5) breakdown
     const totals = new Map<number, number>();
     dues.forEach(d => {
       const dt = d.date ? new Date(d.date) : new Date();
-      if (dt.getFullYear() === year) {
-        const m = dt.getMonth();
-        totals.set(m, (totals.get(m) || 0) + d.amount);
+      if (dt.getFullYear() === year && dt.getMonth() === selectedMonth) {
+        totals.set(d.weekNumber, (totals.get(d.weekNumber) || 0) + d.amount);
       }
     });
     return Array.from(totals.entries())
-      .map(([m, total]) => ({ name: BULAN[m], total, month: m }))
-      .sort((a, b) => a.month - b.month);
-  }, [dues, year]);
+      .map(([w, total]) => ({ name: `Mg ${w}`, total, week: w }))
+      .sort((a, b) => a.week - b.week);
+  }, [dues, year, selectedMonth]);
 
   const fetchData = async () => {
     try {
@@ -185,10 +201,24 @@ export default function DuesPage({ token }: { token: string }) {
       {/* Chart Section */}
       {dues.length > 0 && (
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mb-8">
-          <h2 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-emerald-500" />
-            Grafik Tren Persembahan per Bulan — Tahun {year}
-          </h2>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+            <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-emerald-500" />
+              {selectedMonth === 'all'
+                ? `Grafik Tren Persembahan per Bulan — Tahun ${year}`
+                : `Grafik Persembahan Bulan ${BULAN[selectedMonth]} ${year}`}
+            </h2>
+            <select
+              value={selectedMonth === 'all' ? 'all' : String(selectedMonth)}
+              onChange={(e) => setSelectedMonth(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+              className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+            >
+              <option value="all">Semua Bulan</option>
+              {BULAN.map((b, i) => (
+                <option key={i} value={i}>{b}</option>
+              ))}
+            </select>
+          </div>
           <div className="h-[300px] w-full">
             {chartReady ? (
             <ResponsiveContainer width="100%" height="100%">
