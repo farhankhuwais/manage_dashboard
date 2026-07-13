@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Users, ReceiptText, LogOut, LayoutDashboard, Menu, X, Trash2, ShieldCheck, Landmark, Search, BarChart3 } from 'lucide-react';
+import { Users, ReceiptText, LogOut, LayoutDashboard, Menu, X, Trash2, ShieldCheck, Landmark, Search, BarChart3, Church, Home, Users2, Briefcase, Heart, Droplets, GraduationCap } from 'lucide-react';
 import DuesPage from './DuesPage';
 import LoginPage from './LoginPage';
 import UsersPage from './UsersPage';
@@ -588,6 +588,28 @@ function OverviewPage({ token }: { token: string }) {
     { key: 'pendidikanTerakhir', label: 'Pendidikan Terakhir', options: selOpts('pendidikanTerakhir') },
   ];
 
+  const CARD_THEMES = [
+    { iconBg: 'bg-blue-50', icon: 'text-blue-600', pill: 'bg-blue-50 text-blue-600' },
+    { iconBg: 'bg-emerald-50', icon: 'text-emerald-600', pill: 'bg-emerald-50 text-emerald-600' },
+    { iconBg: 'bg-violet-50', icon: 'text-violet-600', pill: 'bg-violet-50 text-violet-600' },
+    { iconBg: 'bg-amber-50', icon: 'text-amber-600', pill: 'bg-amber-50 text-amber-600' },
+    { iconBg: 'bg-rose-50', icon: 'text-rose-600', pill: 'bg-rose-50 text-rose-600' },
+    { iconBg: 'bg-cyan-50', icon: 'text-cyan-600', pill: 'bg-cyan-50 text-cyan-600' },
+    { iconBg: 'bg-indigo-50', icon: 'text-indigo-600', pill: 'bg-indigo-50 text-indigo-600' },
+    { iconBg: 'bg-teal-50', icon: 'text-teal-600', pill: 'bg-teal-50 text-teal-600' },
+  ];
+
+  const FIELD_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+    statusWarga: Church,
+    statusKeluarga: Home,
+    statusAnggota: Users,
+    komisi: Users2,
+    pekerjaan: Briefcase,
+    statusPernikahan: Heart,
+    golonganDarah: Droplets,
+    pendidikanTerakhir: GraduationCap,
+  };
+
   const countRows = (key: keyof Member, options: string[]) => {
     const counts = new Map<string, number>(options.map((o) => [o, 0]));
     let empty = 0;
@@ -604,9 +626,12 @@ function OverviewPage({ token }: { token: string }) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-        <div className="col-span-full sm:col-span-1 bg-gradient-to-br from-blue-600 to-blue-700 text-white p-5 rounded-2xl shadow">
-          <p className="text-blue-100 text-sm">Total Jemaat Tercatat</p>
-          <p className="text-3xl font-extrabold mt-1">{members.length}</p>
+        <div className="col-span-full sm:col-span-1 bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-5 rounded-2xl shadow-lg">
+          <div className="flex items-center gap-2">
+            <Church className="w-5 h-5 text-blue-200" />
+            <p className="text-blue-100 text-sm">Total Jemaat Tercatat</p>
+          </div>
+          <p className="text-3xl font-extrabold mt-2">{members.length}</p>
         </div>
       </div>
 
@@ -616,36 +641,36 @@ function OverviewPage({ token }: { token: string }) {
         <div className="text-center py-20 text-slate-400">Belum ada data jemaat.</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {OVERVIEW_FIELDS.map((f) => {
+          {OVERVIEW_FIELDS.map((f, i) => {
+            const t = CARD_THEMES[i % CARD_THEMES.length];
+            const Icon = FIELD_ICONS[String(f.key)] ?? Users;
             const rows = countRows(f.key, f.options);
             const total = rows.reduce((s, r) => s + r.count, 0);
             return (
-              <div key={String(f.key)} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-slate-800">{f.label}</h3>
-                  <span className="text-xs text-slate-400">{total}</span>
+              <div
+                key={String(f.key)}
+                className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+              >
+                <div className="flex items-center gap-3 mb-5">
+                  <div className={`w-9 h-9 rounded-xl ${t.iconBg} flex items-center justify-center`}>
+                    <Icon className={`w-5 h-5 ${t.icon}`} />
+                  </div>
+                  <h3 className="flex-1 font-bold text-slate-800 leading-tight">{f.label}</h3>
+                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${t.pill}`}>{total}</span>
                 </div>
-                <div className="space-y-3">
-                  {rows.map((r) => {
-                    const pct = total > 0 ? Math.round((r.count / total) * 100) : 0;
-                    return (
-                      <div key={r.label}>
-                        <div className="flex items-center justify-between text-sm mb-1">
-                          <span className="text-slate-600 truncate pr-2">{r.label}</span>
-                          <span className="shrink-0 text-slate-500">
-                            {r.count}
-                            <span className="text-slate-300 ml-1">({pct}%)</span>
-                          </span>
-                        </div>
-                        <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
-                          <div
-                            className={`h-full rounded-full ${r.count === 0 ? 'bg-slate-200' : 'bg-blue-500'}`}
-                            style={{ width: `${pct}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div className="space-y-2">
+                  {rows.map((r) => (
+                    <div key={r.label} className="flex items-center justify-between text-sm">
+                      <span className="text-slate-600 truncate pr-2">{r.label}</span>
+                      <span
+                        className={`shrink-0 font-semibold rounded-full px-2.5 py-0.5 ${
+                          r.count === 0 ? 'bg-slate-50 text-slate-400' : t.pill
+                        }`}
+                      >
+                        {r.count}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
             );
