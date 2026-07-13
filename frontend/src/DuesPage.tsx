@@ -34,7 +34,6 @@ export default function DuesPage({ token }: { token: string }) {
   const today = new Date().toISOString().split('T')[0];
 
   // Form State
-  const [memberId, setMemberId] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState<string>(today);
   const [amount, setAmount] = useState<number>(50000);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -104,7 +103,7 @@ export default function DuesPage({ token }: { token: string }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!memberId || isSubmitting) return;
+    if (isSubmitting) return;
 
     setIsSubmitting(true);
     try {
@@ -115,7 +114,6 @@ export default function DuesPage({ token }: { token: string }) {
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
-          memberId: parseInt(memberId),
           weekNumber,
           year,
           amount
@@ -123,7 +121,6 @@ export default function DuesPage({ token }: { token: string }) {
       });
 
       if (res.ok) {
-        setMemberId('');
         setAmount(50000);
         // We keep selectedDate as is, or reset it to today if preferred. Let's reset to today.
         setSelectedDate(today);
@@ -214,17 +211,9 @@ export default function DuesPage({ token }: { token: string }) {
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">Nama Jemaat</label>
-                <select
-                  value={memberId}
-                  onChange={(e) => setMemberId(e.target.value)}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 bg-white"
-                  required
-                >
-                  <option value="" disabled>-- Pilih Jemaat --</option>
-                  {members.map(m => (
-                    <option key={m.id} value={m.id}>{m.name}</option>
-                  ))}
-                </select>
+              <div className="w-full rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 text-slate-500 text-sm">
+                Persembahan umum — tidak terikat nama jemaat
+              </div>
               </div>
 
               <div className="flex gap-4">
@@ -307,7 +296,7 @@ export default function DuesPage({ token }: { token: string }) {
                         return (
                           <tr key={d.id} className="border-b border-slate-50 hover:bg-blue-50/30 transition-colors">
                             <td className="py-4 px-6 text-slate-500 text-sm">#{d.id}</td>
-                            <td className="py-4 px-6 font-medium text-slate-700">{member ? member.name : 'Unknown'}</td>
+                             <td className="py-4 px-6 font-medium text-slate-700">{member ? member.name : 'Umum'}</td>
                             <td className="py-4 px-6 text-sm text-slate-600">Mg {d.weekNumber}, {d.year}</td>
                             <td className="py-4 px-6 font-semibold text-slate-800 text-right">
                               Rp {d.amount.toLocaleString('id-ID')}

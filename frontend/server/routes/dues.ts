@@ -6,13 +6,17 @@ import { and, eq } from "drizzle-orm";
 const router = Router();
 
 router.post("/", async (req, res) => {
-  const memberId = Number(req.body.memberId);
+  const rawMemberId = req.body.memberId;
+  const memberId =
+    rawMemberId !== undefined && rawMemberId !== null && rawMemberId !== ""
+      ? Number(rawMemberId)
+      : null;
   const weekNumber = Number(req.body.weekNumber);
   const year = Number(req.body.year);
   const amount = Number(req.body.amount);
 
   if (
-    !Number.isInteger(memberId) || memberId <= 0 ||
+    (memberId !== null && (!Number.isInteger(memberId) || memberId <= 0)) ||
     !Number.isInteger(weekNumber) || weekNumber <= 0 ||
     !Number.isInteger(year) || year <= 0 ||
     !Number.isInteger(amount) || amount <= 0
@@ -21,18 +25,20 @@ router.post("/", async (req, res) => {
   }
 
   try {
-    const existing = await db.select().from(weeklyDues).where(
-      and(
-        eq(weeklyDues.memberId, memberId),
-        eq(weeklyDues.weekNumber, weekNumber),
-        eq(weeklyDues.year, year)
-      )
-    );
+    if (memberId !== null) {
+      const existing = await db.select().from(weeklyDues).where(
+        and(
+          eq(weeklyDues.memberId, memberId),
+          eq(weeklyDues.weekNumber, weekNumber),
+          eq(weeklyDues.year, year)
+        )
+      );
 
-    if (existing.length > 0) {
-      return res.status(400).json({ error: "Jemaat sudah membayar iuran untuk minggu ini" });
+      if (existing.length > 0) {
+        return res.status(400).json({ error: "Jemaat sudah membayar iuran untuk minggu ini" });
+      }
     }
-    
+
     await db.insert(weeklyDues).values({ memberId, weekNumber, year, amount });
     res.status(201).json({ message: "Berhasil mencatat iuran" });
   } catch (error) {
