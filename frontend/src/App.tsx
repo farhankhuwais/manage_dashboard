@@ -194,11 +194,15 @@ const HEADER_LABEL_COLOR: Record<string, string> = (() => {
   return map;
 })();
 
+const STATUS_OPTIONS = ['Aktif', 'Tidak Aktif', 'Pindah', 'Meninggal'];
+
 const statusBadgeClass = (status?: string) =>
   status === "Aktif"
     ? "bg-emerald-50 text-emerald-700 border-emerald-200"
     : status === "Pindah"
     ? "bg-amber-50 text-amber-700 border-amber-200"
+    : status === "Tidak Aktif"
+    ? "bg-slate-100 text-slate-600 border-slate-200"
     : "bg-rose-50 text-rose-700 border-rose-200";
 
 const ALL_INFO_KEYS: (keyof Member)[] = [
@@ -629,9 +633,9 @@ function MembersPage({ token }: { token: string }) {
                       <div key="status">
                         <label className="block text-xs font-medium text-slate-500 mb-1">Status</label>
                         <select value={status} onChange={(e) => setStatus(e.target.value)} className={inputCls}>
-                          <option value="Aktif">Aktif</option>
-                          <option value="Tidak Aktif">Tidak Aktif</option>
-                          <option value="Pindah">Pindah</option>
+                          {STATUS_OPTIONS.map((s) => (
+                            <option key={s} value={s}>{s}</option>
+                          ))}
                         </select>
                       </div>
                     );
@@ -913,9 +917,9 @@ function MembersPage({ token }: { token: string }) {
             className="border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-300"
           >
             <option value="">Semua Status</option>
-            <option value="Aktif">Aktif</option>
-            <option value="Pindah">Pindah</option>
-            <option value="Non-Aktif">Non-Aktif</option>
+            {STATUS_OPTIONS.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
           </select>
           <select
             value={filterAnggota}
