@@ -19,6 +19,9 @@ router.post("/", async (req, res) => {
   const weekNumber = Number(req.body.weekNumber);
   const year = Number(req.body.year);
   const amount = Number(req.body.amount);
+  const dateVal = req.body.date
+    ? new Date(`${req.body.date}T00:00:00`)
+    : new Date();
 
   if (
     (memberId !== null && (!Number.isInteger(memberId) || memberId <= 0)) ||
@@ -44,7 +47,7 @@ router.post("/", async (req, res) => {
       }
     }
 
-    await db.insert(weeklyDues).values({ memberId, weekNumber, year, amount });
+    await db.insert(weeklyDues).values({ memberId, weekNumber, year, amount, date: dateVal });
     res.status(201).json({ message: "Berhasil mencatat iuran" });
   } catch (error) {
     res.status(500).json({ error: "Gagal mencatat iuran" });

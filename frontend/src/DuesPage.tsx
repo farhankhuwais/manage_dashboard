@@ -136,7 +136,8 @@ export default function DuesPage({ token }: { token: string }) {
         body: JSON.stringify({
           weekNumber,
           year,
-          amount
+          amount,
+          date: selectedDate
         }),
       });
 
