@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Users, ReceiptText, LogOut, LayoutDashboard, Menu, X, Trash2, ShieldCheck, Landmark, Search, BarChart3, Church, Home, Users2, Briefcase, Heart, Droplets, GraduationCap } from 'lucide-react';
+import { Users, ReceiptText, LogOut, LayoutDashboard, Menu, X, Trash2, ShieldCheck, Landmark, Search, BarChart3, Church, Home, Users2, Briefcase, Heart, Droplets, GraduationCap, FileSpreadsheet, FileText } from 'lucide-react';
 import DuesPage from './DuesPage';
 import LoginPage from './LoginPage';
 import UsersPage from './UsersPage';
 import OfferingsPage from './OfferingsPage';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface Member {
   id: number;
@@ -301,6 +304,43 @@ function MembersPage({ token }: { token: string }) {
     setInfo({});
   };
 
+  const buildExportRows = () =>
+    filtered.map((m, i) => {
+      const row: Record<string, string> = { No: String(i + 1) };
+      for (const c of TABLE_COLUMNS) {
+        const v = c.get(m);
+        row[c.label] = v == null || v === '' ? '' : String(v);
+      }
+      return row;
+    });
+
+  const exportExcel = () => {
+    const rows = buildExportRows();
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Data Jemaat');
+    XLSX.writeFile(wb, `Data-Jemaat-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
+  const exportPdf = () => {
+    const doc = new jsPDF({ orientation: 'landscape' });
+    const head = [['No', ...TABLE_COLUMNS.map((c) => c.label)]];
+    const body = filtered.map((m, i) => [
+      String(i + 1),
+      ...TABLE_COLUMNS.map((c) => {
+        const v = c.get(m);
+        return v == null || v === '' ? '-' : String(v);
+      }),
+    ]);
+    autoTable(doc, {
+      head,
+      body,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [79, 70, 229] },
+    });
+    doc.save(`Data-Jemaat-${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
+
   const totalCount = members.length;
   const aktifCount = members.filter((m) => m.status === 'Aktif').length;
   const kepalaKeluargaCount = members.filter((m) => (m.statusKeluarga ?? '') === 'Kepala Keluarga').length;
@@ -458,15 +498,33 @@ function MembersPage({ token }: { token: string }) {
       </div>
 
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 border-t-4 border-t-indigo-500">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-500 flex items-center justify-center shadow-md shadow-indigo-500/30">
-              <LayoutDashboard className="w-5 h-5 text-white" />
+          <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-indigo-500 flex items-center justify-center shadow-md shadow-indigo-500/30">
+                <LayoutDashboard className="w-5 h-5 text-white" />
+              </div>
+              <h2 className="text-lg font-bold text-slate-800">Daftar Jemaat</h2>
             </div>
-            <h2 className="text-lg font-bold text-slate-800">Daftar Jemaat</h2>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={exportExcel}
+                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors"
+                title="Export ke Excel"
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                Excel
+              </button>
+              <button
+                onClick={exportPdf}
+                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-rose-700 bg-rose-50 border border-rose-200 rounded-lg hover:bg-rose-100 transition-colors"
+                title="Export ke PDF"
+              >
+                <FileText className="w-4 h-4" />
+                PDF
+              </button>
+              <span className="text-xs text-slate-500 bg-slate-100 px-3 py-1 rounded-full">{filtered.length} data</span>
+            </div>
           </div>
-          <span className="text-xs text-slate-500 bg-slate-100 px-3 py-1 rounded-full">{filtered.length} data</span>
-        </div>
 
         <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center mb-4">
           <div className="relative flex-1 min-w-[200px]">
