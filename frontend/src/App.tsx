@@ -367,7 +367,7 @@ function MembersPage({ token }: { token: string }) {
             </div>
           ))}
 
-          <div className="flex gap-2 pt-2">
+          <div className="flex justify-end gap-2 pt-2">
             <button
               type="submit"
               disabled={isSubmitting}
