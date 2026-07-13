@@ -33,29 +33,36 @@ const DATE_FIELDS = [
 const strOrNull = (v: unknown): string | null =>
   typeof v === "string" && v.trim() ? v.trim() : null;
 
+const inRange = (d: Date): boolean => {
+  const y = d.getUTCFullYear();
+  return y >= 1900 && y <= 2100;
+};
+
 const parseDate = (v: unknown): string | null => {
   if (v == null) return null;
+  let d: Date | null = null;
   if (v instanceof Date) {
-    return isNaN(v.getTime()) ? null : v.toISOString().slice(0, 10);
-  }
-  if (typeof v === "number") {
+    d = isNaN(v.getTime()) ? null : v;
+  } else if (typeof v === "number") {
     if (v < 1) return null;
-    const d = new Date((v - 25569) * 86400000);
-    return isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
-  }
-  if (typeof v === "string") {
+    const dd = new Date((v - 25569) * 86400000);
+    d = isNaN(dd.getTime()) ? null : dd;
+  } else if (typeof v === "string") {
     const s = v.trim();
     if (!s || s === "-") return null;
-    const d = new Date(s);
-    if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
-    const m = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
-    if (m) {
-      const d2 = new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
-      if (!isNaN(d2.getTime())) return d2.toISOString().slice(0, 10);
+    const dd = new Date(s);
+    if (!isNaN(dd.getTime())) {
+      d = dd;
+    } else {
+      const m = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+      if (m) {
+        const d2 = new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+        d = isNaN(d2.getTime()) ? null : d2;
+      }
     }
-    return null;
   }
-  return null;
+  if (!d || isNaN(d.getTime()) || !inRange(d)) return null;
+  return d.toISOString().slice(0, 10);
 };
 
 const buildExtra = (body: Record<string, unknown>) => {
