@@ -2,12 +2,15 @@ import { useEffect, useState, useMemo } from 'react';
 import { Receipt, Coins, CalendarDays, TrendingUp, Trash2 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
+const BULAN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
 interface Due {
   id: number;
   memberId: number | null;
   weekNumber: number;
   year: number;
   amount: number;
+  date: string;
 }
 
 interface Member {
@@ -21,14 +24,14 @@ export default function DuesPage({ token }: { token: string }) {
   const [loading, setLoading] = useState(true);
   const [chartReady, setChartReady] = useState(false);
 
-  // Helper to get ISO Week and Year
+  // Helper: minggu ke-berapa DALAM bulan + bulan + tahun
   const getWeekInfo = (dateString: string) => {
-    if (!dateString) return { week: 1, year: new Date().getFullYear() };
-    const d = new Date(dateString);
-    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-    const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-    return { week: weekNo, year: d.getUTCFullYear() };
+    const d = dateString ? new Date(`${dateString}T00:00:00`) : new Date();
+    return {
+      week: Math.ceil(d.getDate() / 7),
+      month: d.getMonth(),
+      year: d.getFullYear()
+    };
   };
 
   const today = new Date().toISOString().split('T')[0];
@@ -39,20 +42,21 @@ export default function DuesPage({ token }: { token: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { week: weekNumber, year } = getWeekInfo(selectedDate);
+  const { week: curWeek, month: curMonth, year: curYear } = getWeekInfo(today);
 
   // Aggregating data for chart
   const chartData = useMemo(() => {
-    const grouped = dues.reduce((acc, curr) => {
-      // Kita fokus pada tahun yang sedang dipilih agar grafiknya rapi
-      if (curr.year === year) {
-        const key = `Mg ${curr.weekNumber}`;
-        if (!acc[key]) acc[key] = { name: key, total: 0, week: curr.weekNumber };
-        acc[key].total += curr.amount;
+    const totals = new Map<number, number>();
+    dues.forEach(d => {
+      const dt = d.date ? new Date(d.date) : new Date();
+      if (dt.getFullYear() === year) {
+        const m = dt.getMonth();
+        totals.set(m, (totals.get(m) || 0) + d.amount);
       }
-      return acc;
-    }, {} as Record<string, { name: string, total: number, week: number }>);
-
-    return Object.values(grouped).sort((a, b) => a.week - b.week);
+    });
+    return Array.from(totals.entries())
+      .map(([m, total]) => ({ name: BULAN[m], total, month: m }))
+      .sort((a, b) => a.month - b.month);
   }, [dues, year]);
 
   const fetchData = async () => {
@@ -167,7 +171,10 @@ export default function DuesPage({ token }: { token: string }) {
         <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg shadow-indigo-500/30">
           <CalendarDays className="w-8 h-8 text-white/80 mb-4" />
           <p className="text-indigo-100 text-sm font-medium">Persembahan Masuk Minggu Ini</p>
-          <h3 className="text-3xl font-bold mt-1">{dues.filter(d => d.weekNumber === weekNumber).length} Transaksi</h3>
+          <h3 className="text-3xl font-bold mt-1">{dues.filter(d => {
+            const dt = d.date ? new Date(d.date) : new Date();
+            return dt.getFullYear() === curYear && dt.getMonth() === curMonth && d.weekNumber === curWeek;
+          }).length} Transaksi</h3>
         </div>
         <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm flex flex-col justify-center items-center text-center">
            <Coins className="w-8 h-8 text-amber-500 mb-2" />
@@ -180,7 +187,7 @@ export default function DuesPage({ token }: { token: string }) {
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mb-8">
           <h2 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-emerald-500" />
-            Grafik Tren Persembahan Tahun {year}
+            Grafik Tren Persembahan per Bulan — Tahun {year}
           </h2>
           <div className="h-[300px] w-full">
             {chartReady ? (
@@ -250,7 +257,7 @@ export default function DuesPage({ token }: { token: string }) {
               {selectedDate && (
                 <div className="bg-blue-50/50 border border-blue-100 p-3 rounded-lg text-sm text-blue-800 flex justify-between items-center">
                   <span>Otomatis dihitung sebagai:</span>
-                  <span className="font-bold">Minggu ke-{weekNumber}, Tahun {year}</span>
+                  <span className="font-bold">Minggu ke-{weekNumber} (per bulan), Tahun {year}</span>
                 </div>
               )}
 
@@ -316,7 +323,7 @@ export default function DuesPage({ token }: { token: string }) {
                           <tr key={d.id} className="border-b border-slate-50 hover:bg-blue-50/30 transition-colors">
                             <td className="py-4 px-6 text-slate-500 text-sm">#{d.id}</td>
                              <td className="py-4 px-6 font-medium text-slate-700">{member ? member.name : 'Umum'}</td>
-                            <td className="py-4 px-6 text-sm text-slate-600">Mg {d.weekNumber}, {d.year}</td>
+                            <td className="py-4 px-6 text-sm text-slate-600">{`Mg ${d.weekNumber}, ${BULAN[new Date(d.date).getMonth()]} ${new Date(d.date).getFullYear()}`}</td>
                             <td className="py-4 px-6 font-semibold text-slate-800 text-right">
                               Rp {d.amount.toLocaleString('id-ID')}
                             </td>
