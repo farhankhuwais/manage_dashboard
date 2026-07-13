@@ -42,6 +42,12 @@ export default function UsersPage({ token }: { token: string }) {
     e.preventDefault();
     if (!email.trim() || !password || isSubmitting) return;
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      alert('Mohon masukkan format email yang benar (contoh: nama@email.com)');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const res = await fetch('/api/users', {
