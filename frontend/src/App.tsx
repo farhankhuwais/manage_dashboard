@@ -67,6 +67,63 @@ const INFO_SELECT_FIELDS: { key: keyof Member; label: string; options: string[] 
   { key: "atestasi", label: "Atestasi", options: ["Y", "N"] },
 ];
 
+type FormField =
+  | { type: "name" }
+  | { type: "status" }
+  | { type: "statusAnggota" }
+  | { type: "text"; key: string; label: string; full?: boolean; number?: boolean }
+  | { type: "date"; key: string; label: string }
+  | { type: "select"; key: string; label: string; options: string[] };
+
+const FORM_SECTIONS: { title: string; fields: FormField[] }[] = [
+  {
+    title: "Data Keanggotaan",
+    fields: [
+      { type: "statusAnggota" },
+      { type: "select", key: "komisi", label: "Komisi", options: ["Anak", "Youth", "Pemuda", "Muda", "Dewasa", "Usin", "non"] },
+      { type: "name" },
+      { type: "status" },
+      { type: "text", key: "noUrut", label: "No. Urut", number: true },
+      { type: "select", key: "statusPosisi", label: "Status Posisi", options: ["Jumlah Jemaat", "Kepala Keluarga", "Warga Gereja"] },
+    ],
+  },
+  {
+    title: "Data Pribadi",
+    fields: [
+      { type: "text", key: "tempatLahir", label: "Tempat Lahir" },
+      { type: "date", key: "tanggalLahir", label: "Tanggal Lahir" },
+      { type: "select", key: "jenisKelamin", label: "Jenis Kelamin", options: ["Laki-Laki", "Perempuan"] },
+      { type: "select", key: "wargaNegara", label: "Warga Negara", options: ["WNI", "WNA"] },
+      { type: "select", key: "statusPernikahan", label: "Status Pernikahan", options: ["Menikah", "Belum Menikah", "Duda", "Janda"] },
+      { type: "date", key: "tanggalNikah", label: "Tanggal Pernikahan" },
+      { type: "select", key: "golonganDarah", label: "Golongan Darah", options: ["A", "B", "AB", "O"] },
+      { type: "text", key: "nik", label: "NIK" },
+    ],
+  },
+  {
+    title: "Data Kontak & Tempat Tinggal",
+    fields: [
+      { type: "text", key: "alamatDomisili", label: "Alamat Domisili", full: true },
+      { type: "select", key: "kota", label: "Kota", options: ["Bekasi", "Jakarta", "Kab. Bekasi"] },
+      { type: "text", key: "noTelp", label: "No. Telp" },
+      { type: "text", key: "pekerjaan", label: "Pekerjaan" },
+      { type: "select", key: "pendidikanTerakhir", label: "Pendidikan Terakhir", options: ["Belum Sekolah", "Play Group", "TK", "SD", "SMP", "SMA", "SMK", "D3", "D4", "S1", "S2", "S3", "Non-Formal"] },
+    ],
+  },
+  {
+    title: "Data Sakramen & Gerejawi",
+    fields: [
+      { type: "select", key: "penyerahanAnak", label: "Penyerahan Anak", options: ["Y", "N"] },
+      { type: "date", key: "penyerahanAnakTgl", label: "Tanggal Penyerahan Anak" },
+      { type: "select", key: "baptisSidi", label: "Baptis / Sidi", options: ["Y", "N"] },
+      { type: "date", key: "baptisSidiTgl", label: "Tanggal Baptis / Sidi" },
+      { type: "select", key: "atestasi", label: "Atestasi", options: ["Y", "N"] },
+      { type: "date", key: "atestasiTgl", label: "Tanggal Atestasi" },
+      { type: "text", key: "asalGereja", label: "Asal Gereja" },
+    ],
+  },
+];
+
 const ALL_INFO_KEYS: (keyof Member)[] = [
   ...INFO_TEXT_FIELDS.map((f) => f.key),
   ...INFO_DATE_FIELDS.map((f) => f.key),
@@ -202,94 +259,115 @@ function MembersPage({ token }: { token: string }) {
           {editingMemberId ? 'Edit Jemaat' : 'Tambah Jemaat Baru'}
         </h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <input
-              type="text"
-              placeholder="Nama Jemaat"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="flex-1 px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
-              required
-            />
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 bg-white transition-all min-w-[150px]"
-            >
-              <option value="Aktif">Aktif</option>
-              <option value="Tidak Aktif">Tidak Aktif</option>
-              <option value="Pindah">Pindah</option>
-            </select>
-            <select
-              value={statusAnggota}
-              onChange={(e) => setStatusAnggota(e.target.value)}
-              className="px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 bg-white transition-all min-w-[150px]"
-            >
-              <option value="Jemaat">Jemaat</option>
-              <option value="Simpatisan">Simpatisan</option>
-            </select>
-            <div className="flex gap-2">
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 shadow-md shadow-blue-500/20 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center min-w-[120px]"
-              >
-                {isSubmitting ? (
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                ) : (
-                  editingMemberId ? 'Simpan' : 'Tambah'
-                )}
-              </button>
-              {editingMemberId && (
-                <button
-                  type="button"
-                  onClick={handleCancelEdit}
-                  className="px-6 py-3 bg-white text-slate-700 font-semibold border border-slate-200 rounded-xl hover:bg-slate-50 transition-all active:scale-95"
-                >
-                  Batal
-                </button>
-              )}
+          {FORM_SECTIONS.map((section) => (
+            <div key={section.title} className="rounded-xl border border-slate-100 p-4">
+              <h3 className="text-sm font-semibold text-slate-700 mb-3 pb-2 border-b border-slate-100 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                {section.title}
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {section.fields.map((f) => {
+                  if (f.type === "name") {
+                    return (
+                      <div key="name" className="md:col-span-3">
+                        <label className="block text-xs font-medium text-slate-500 mb-1">Nama Lengkap</label>
+                        <input
+                          type="text"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          placeholder="Masukkan nama lengkap jemaat"
+                          className={inputCls}
+                          required
+                        />
+                      </div>
+                    );
+                  }
+                  if (f.type === "status") {
+                    return (
+                      <div key="status">
+                        <label className="block text-xs font-medium text-slate-500 mb-1">Status</label>
+                        <select value={status} onChange={(e) => setStatus(e.target.value)} className={inputCls}>
+                          <option value="Aktif">Aktif</option>
+                          <option value="Tidak Aktif">Tidak Aktif</option>
+                          <option value="Pindah">Pindah</option>
+                        </select>
+                      </div>
+                    );
+                  }
+                  if (f.type === "statusAnggota") {
+                    return (
+                      <div key="statusAnggota">
+                        <label className="block text-xs font-medium text-slate-500 mb-1">Status Anggota</label>
+                        <select value={statusAnggota} onChange={(e) => setStatusAnggota(e.target.value)} className={inputCls}>
+                          <option value="Jemaat">Jemaat</option>
+                          <option value="Simpatisan">Simpatisan</option>
+                        </select>
+                      </div>
+                    );
+                  }
+                  if (f.type === "text") {
+                    return (
+                      <div key={f.key} className={f.full ? "md:col-span-3" : ""}>
+                        <label className="block text-xs font-medium text-slate-500 mb-1">{f.label}</label>
+                        <input
+                          type={f.number ? "number" : "text"}
+                          value={info[f.key] ?? ""}
+                          onChange={(e) => setField(f.key, e.target.value)}
+                          className={inputCls}
+                        />
+                      </div>
+                    );
+                  }
+                  if (f.type === "date") {
+                    return (
+                      <div key={f.key}>
+                        <label className="block text-xs font-medium text-slate-500 mb-1">{f.label}</label>
+                        <input
+                          type="date"
+                          value={info[f.key] ?? ""}
+                          onChange={(e) => setField(f.key, e.target.value)}
+                          className={inputCls}
+                        />
+                      </div>
+                    );
+                  }
+                  return (
+                    <div key={f.key}>
+                      <label className="block text-xs font-medium text-slate-500 mb-1">{f.label}</label>
+                      <select value={info[f.key] ?? ""} onChange={(e) => setField(f.key, e.target.value)} className={inputCls}>
+                        <option value="">—</option>
+                        {f.options.map((o) => (
+                          <option key={o} value={o}>{o}</option>
+                        ))}
+                      </select>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          ))}
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-            {INFO_TEXT_FIELDS.map((f) => (
-              <div key={f.key as string} className={f.full ? "md:col-span-3" : ""}>
-                <label className="block text-xs font-medium text-slate-500 mb-1">{f.label}</label>
-                <input
-                  type={f.type || "text"}
-                  value={info[f.key as string] ?? ""}
-                  onChange={(e) => setField(f.key as string, e.target.value)}
-                  className={inputCls}
-                />
-              </div>
-            ))}
-            {INFO_DATE_FIELDS.map((f) => (
-              <div key={f.key as string}>
-                <label className="block text-xs font-medium text-slate-500 mb-1">{f.label}</label>
-                <input
-                  type="date"
-                  value={info[f.key as string] ?? ""}
-                  onChange={(e) => setField(f.key as string, e.target.value)}
-                  className={inputCls}
-                />
-              </div>
-            ))}
-            {INFO_SELECT_FIELDS.map((f) => (
-              <div key={f.key as string}>
-                <label className="block text-xs font-medium text-slate-500 mb-1">{f.label}</label>
-                <select
-                  value={info[f.key as string] ?? ""}
-                  onChange={(e) => setField(f.key as string, e.target.value)}
-                  className={inputCls}
-                >
-                  <option value="">—</option>
-                  {f.options.map((o) => (
-                    <option key={o} value={o}>{o}</option>
-                  ))}
-                </select>
-              </div>
-            ))}
+          <div className="flex gap-2 pt-2">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 shadow-md shadow-blue-500/20 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center min-w-[120px]"
+            >
+              {isSubmitting ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              ) : (
+                editingMemberId ? 'Simpan' : 'Tambah'
+              )}
+            </button>
+            {editingMemberId && (
+              <button
+                type="button"
+                onClick={handleCancelEdit}
+                className="px-6 py-3 bg-white text-slate-700 font-semibold border border-slate-200 rounded-xl hover:bg-slate-50 transition-all active:scale-95"
+              >
+                Batal
+              </button>
+            )}
           </div>
         </form>
       </div>
