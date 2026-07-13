@@ -167,6 +167,12 @@ const LABEL_TO_KEY: Record<string, string> = (() => {
   return map;
 })();
 
+const DATE_KEYS = ['tanggalLahir', 'tanggalNikah', 'penyerahanAnakTgl', 'baptisSidiTgl', 'atestasiTgl'];
+
+const KEY_TO_LABEL: Record<string, string> = Object.fromEntries(
+  Object.entries(LABEL_TO_KEY).map(([l, k]) => [k, l]),
+);
+
 const statusBadgeClass = (status?: string) =>
   status === "Aktif"
     ? "bg-emerald-50 text-emerald-700 border-emerald-200"
@@ -197,6 +203,13 @@ function MembersPage({ token }: { token: string }) {
   const [filterAnggota, setFilterAnggota] = useState('');
   const [filterKomisi, setFilterKomisi] = useState('');
   const [upsertMode, setUpsertMode] = useState(false);
+  const [importPreview, setImportPreview] = useState<{
+    rows: { idx: number; cells: Record<string, string>; issues: string[] }[];
+    validCount: number;
+    problemCount: number;
+    upsert: boolean;
+  } | null>(null);
+  const importPayloadRef = useRef<Record<string, string>[]>([]);
 
   const filtered = members.filter((m) => {
     const q = search.trim().toLowerCase();
@@ -357,39 +370,93 @@ function MembersPage({ token }: { token: string }) {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const isValidDate = (v: string): boolean => {
+    if (!v || v === "-") return false;
+    if (/^\d+$/.test(v)) {
+      const n = Number(v);
+      return n >= 1 && n < 70000;
+    }
+    const m = v.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+    if (m) {
+      const d = new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+      return d.getFullYear() >= 1900 && d.getFullYear() <= 2100;
+    }
+    const d = new Date(v);
+    if (isNaN(d.getTime())) return false;
+    const y = d.getUTCFullYear();
+    return y >= 1900 && y <= 2100;
+  };
+
   const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
       const buf = await file.arrayBuffer();
-      const wb = XLSX.read(buf, { type: "array" });
+      const wb = XLSX.read(buf, { type: "array", cellDates: true });
       const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws);
-      const payload = rows.map((r) => {
-        const obj: Record<string, unknown> = {};
+      const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: "" });
+      const payload: Record<string, string>[] = [];
+      const previewRows: { idx: number; cells: Record<string, string>; issues: string[] }[] = [];
+      for (let i = 0; i < rows.length; i++) {
+        const r = rows[i];
+        const obj: Record<string, string> = {};
+        let name = "";
+        let status = "Aktif";
+        const issues: string[] = [];
         for (const [label, val] of Object.entries(r)) {
           const key = LABEL_TO_KEY[label?.toString().trim()];
-          if (key) obj[key] = val == null ? "" : String(val);
+          if (!key) continue;
+          const v = val == null ? "" : String(val).trim();
+          if (key === "name") name = v;
+          else if (key === "status") status = v || "Aktif";
+          else obj[key] = v;
         }
-        return obj;
+        const cells: Record<string, string> = { name, status, ...obj };
+        if (!name) issues.push("Nama kosong — baris dilewati");
+        for (const f of DATE_KEYS) {
+          const v = obj[f];
+          if (v && !isValidDate(v)) {
+            const lbl = KEY_TO_LABEL[f] ?? f;
+            issues.push(`${lbl}: "${v}" bukan tanggal valid (akan dikosongkan)`);
+          }
+        }
+        if (name) payload.push({ name, status, ...obj });
+        previewRows.push({ idx: i + 2, cells, issues });
+      }
+      importPayloadRef.current = payload;
+      setImportPreview({
+        rows: previewRows,
+        validCount: payload.length,
+        problemCount: previewRows.filter((r) => r.issues.length).length,
+        upsert: upsertMode,
       });
+    } catch (err) {
+      alert("Gagal membaca file Excel. Pastikan format .xlsx/.csv benar.");
+    } finally {
+      e.target.value = "";
+    }
+  };
+
+  const confirmImport = async () => {
+    if (!importPreview) return;
+    const payload = importPayloadRef.current;
+    try {
       const res = await fetch("/api/members/bulk", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ upsert: upsertMode, data: payload }),
+        body: JSON.stringify({ upsert: importPreview.upsert, data: payload }),
       });
       if (res.ok) {
         const d = await res.json();
         await fetchMembers();
+        setImportPreview(null);
         alert(`Import selesai: ${d.message}`);
       } else {
         const d = await res.json();
         alert(d.error || "Gagal import data");
       }
     } catch (err) {
-      alert("Gagal membaca file Excel. Pastikan format .xlsx/.csv benar.");
-    } finally {
-      e.target.value = "";
+      alert("Gagal mengirim data import.");
     }
   };
 
@@ -618,6 +685,127 @@ function MembersPage({ token }: { token: string }) {
               onChange={handleImportFile}
             />
           </div>
+
+          {importPreview && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50"
+              onClick={() => setImportPreview(null)}
+            >
+              <div
+                className="bg-white rounded-2xl shadow-xl w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-800">Preview Import Data Jemaat</h3>
+                    <p className="text-xs text-slate-500">
+                      Periksa sebelum mengimpor. Baris bermasalah ditandai & akan dikosongkan tanggalnya.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setImportPreview(null)}
+                    className="text-slate-400 hover:text-slate-700 text-xl leading-none"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="px-6 py-3 flex flex-wrap items-center gap-3 bg-slate-50 border-b border-slate-100 text-sm">
+                  <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    {importPreview.validCount} baris akan diimpor
+                  </span>
+                  <span
+                    className={`px-3 py-1 rounded-full border ${
+                      importPreview.problemCount
+                        ? "bg-amber-50 text-amber-700 border-amber-200"
+                        : "bg-slate-100 text-slate-400 border-slate-200"
+                    }`}
+                  >
+                    {importPreview.problemCount} baris bermasalah
+                  </span>
+                  <label className="flex items-center gap-2 ml-auto cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={importPreview.upsert}
+                      onChange={(e) =>
+                        setImportPreview({ ...importPreview, upsert: e.target.checked })
+                      }
+                      className="accent-blue-600"
+                    />
+                    <span className="text-slate-600">Upsert berdasarkan Nama</span>
+                  </label>
+                </div>
+
+                {importPreview.problemCount > 0 && (
+                  <div className="px-6 py-3 bg-amber-50 border-b border-amber-100 max-h-40 overflow-auto">
+                    <p className="text-sm font-semibold text-amber-800 mb-1">Laporan baris bermasalah:</p>
+                    <ul className="text-xs text-amber-700 list-disc pl-5 space-y-0.5">
+                      {importPreview.rows
+                        .filter((r) => r.issues.length)
+                        .map((r) => (
+                          <li key={r.idx}>
+                            <span className="font-medium">Baris {r.idx}</span>
+                            {r.cells.name ? ` (${r.cells.name})` : ""}: {r.issues.join("; ")}
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="flex-1 overflow-auto">
+                  <table className="w-full text-xs border-collapse">
+                    <thead className="sticky top-0 bg-slate-800 text-white">
+                      <tr>
+                        <th className="px-2 py-2 text-left font-semibold whitespace-nowrap">#</th>
+                        {TABLE_COLUMNS.map((c) => (
+                          <th key={c.label} className="px-2 py-2 text-left font-semibold whitespace-nowrap">
+                            {c.label}
+                          </th>
+                        ))}
+                        <th className="px-2 py-2 text-left font-semibold whitespace-nowrap">Catatan</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {importPreview.rows.map((r) => (
+                        <tr
+                          key={r.idx}
+                          className={`border-b border-slate-100 ${
+                            r.issues.length ? "bg-amber-50/60" : "hover:bg-slate-50"
+                          }`}
+                        >
+                          <td className="px-2 py-1.5 text-slate-400 whitespace-nowrap">{r.idx}</td>
+                          {TABLE_COLUMNS.map((c) => (
+                            <td key={c.label} className="px-2 py-1.5 text-slate-700 whitespace-nowrap max-w-[160px] truncate">
+                              {r.cells[LABEL_TO_KEY[c.label]] ?? ""}
+                            </td>
+                          ))}
+                          <td className="px-2 py-1.5 text-amber-700 whitespace-nowrap">
+                            {r.issues.length ? r.issues.join("; ") : ""}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3">
+                  <button
+                    onClick={() => setImportPreview(null)}
+                    className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    onClick={confirmImport}
+                    disabled={!importPreview.validCount}
+                    className="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Import {importPreview.validCount} baris
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
         <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center mb-4">
           <div className="relative flex-1 min-w-[200px]">
