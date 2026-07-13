@@ -170,7 +170,7 @@ export default function DuesPage({ token }: { token: string }) {
                   dx={-10}
                 />
                 <Tooltip 
-                  formatter={(value: number) => [`Rp ${value.toLocaleString('id-ID')}`, 'Total Persembahan']}
+                  formatter={(value: any) => [`Rp ${Number(value || 0).toLocaleString('id-ID')}`, 'Total Persembahan']}
                   contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                 />
                 <Line 
