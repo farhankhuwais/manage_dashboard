@@ -124,6 +124,28 @@ const FORM_SECTIONS: { title: string; fields: FormField[] }[] = [
   },
 ];
 
+type TableColumn = {
+  label: string;
+  badge?: boolean;
+  get: (m: Member) => string | number | null | undefined;
+};
+
+const TABLE_COLUMNS: TableColumn[] = FORM_SECTIONS.flatMap((section) =>
+  section.fields.map((f) => {
+    if (f.type === "name") return { label: "Nama Lengkap", get: (m) => m.name };
+    if (f.type === "status") return { label: "Status", badge: true, get: (m) => m.status };
+    if (f.type === "statusAnggota") return { label: "Status Anggota", get: (m) => m.statusAnggota ?? "Jemaat" };
+    return { label: f.label, get: (m) => (m as any)[f.key] };
+  })
+);
+
+const statusBadgeClass = (status?: string) =>
+  status === "Aktif"
+    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+    : status === "Pindah"
+    ? "bg-amber-50 text-amber-700 border-amber-200"
+    : "bg-rose-50 text-rose-700 border-rose-200";
+
 const ALL_INFO_KEYS: (keyof Member)[] = [
   ...INFO_TEXT_FIELDS.map((f) => f.key),
   ...INFO_DATE_FIELDS.map((f) => f.key),
@@ -388,54 +410,34 @@ function MembersPage({ token }: { token: string }) {
               <thead>
                 <tr className="bg-slate-50/80 border-b border-slate-100">
                   <th className="py-4 px-6 font-semibold text-slate-600 text-sm">No</th>
-                  <th className="py-4 px-6 font-semibold text-slate-600 text-sm">Nama Jemaat</th>
-                  <th className="py-4 px-6 font-semibold text-slate-600 text-sm">Status</th>
-                  <th className="py-4 px-6 font-semibold text-slate-600 text-sm">Status Anggota</th>
-                  <th className="py-4 px-6 font-semibold text-slate-600 text-sm">Status Posisi</th>
-                  <th className="py-4 px-6 font-semibold text-slate-600 text-sm">Komisi</th>
-                  <th className="py-4 px-6 font-semibold text-slate-600 text-sm">JK</th>
-                  <th className="py-4 px-6 font-semibold text-slate-600 text-sm">Tgl Lahir</th>
-                  <th className="py-4 px-6 font-semibold text-slate-600 text-sm">No Telp</th>
-                  <th className="py-4 px-6 font-semibold text-slate-600 text-sm">Kota</th>
-                  <th className="py-4 px-6 font-semibold text-slate-600 text-sm">Pekerjaan</th>
-                  <th className="py-4 px-6 font-semibold text-slate-600 text-sm">Pendidikan</th>
+                  {TABLE_COLUMNS.map((c) => (
+                    <th key={c.label} className="py-4 px-6 font-semibold text-slate-600 text-sm whitespace-nowrap">{c.label}</th>
+                  ))}
                   <th className="py-4 px-6 font-semibold text-slate-600 text-sm text-right">Aksi</th>
                 </tr>
               </thead>
               <tbody>
                 {members.length === 0 ? (
                   <tr>
-                    <td colSpan={13} className="py-12 text-center text-slate-400">
+                    <td colSpan={TABLE_COLUMNS.length + 2} className="py-12 text-center text-slate-400">
                       Belum ada data jemaat yang terdaftar.
                     </td>
                   </tr>
                 ) : (
-                  members.map((m) => (
+                  members.map((m, i) => (
                     <tr key={m.id} className="border-b border-slate-50 hover:bg-blue-50/30 transition-colors group">
-                      <td className="py-4 px-6 text-slate-500">{m.noUrut ?? `#${m.id}`}</td>
-                      <td className="py-4 px-6 font-medium text-slate-700">{m.name}</td>
-                      <td className="py-4 px-6">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-1 text-xs rounded-full font-medium border ${
-                            m.status === 'Aktif'
-                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                              : m.status === 'Pindah'
-                              ? 'bg-amber-50 text-amber-700 border-amber-200'
-                              : 'bg-rose-50 text-rose-700 border-rose-200'
-                          }`}
-                        >
-                          {m.status}
-                        </span>
-                       </td>
-                       <td className="py-4 px-6 text-slate-600">{m.statusAnggota || '-'}</td>
-                       <td className="py-4 px-6 text-slate-600">{m.statusPosisi || '-'}</td>
-                      <td className="py-4 px-6 text-slate-600">{m.komisi || '-'}</td>
-                      <td className="py-4 px-6 text-slate-600">{m.jenisKelamin || '-'}</td>
-                      <td className="py-4 px-6 text-slate-600">{m.tanggalLahir || '-'}</td>
-                      <td className="py-4 px-6 text-slate-600">{m.noTelp || '-'}</td>
-                      <td className="py-4 px-6 text-slate-600">{m.kota || '-'}</td>
-                      <td className="py-4 px-6 text-slate-600">{m.pekerjaan || '-'}</td>
-                      <td className="py-4 px-6 text-slate-600">{m.pendidikanTerakhir || '-'}</td>
+                      <td className="py-4 px-6 text-slate-500">{m.noUrut ?? i + 1}</td>
+                      {TABLE_COLUMNS.map((c) => (
+                        <td key={c.label} className="py-4 px-6 text-slate-600 whitespace-nowrap">
+                          {c.badge ? (
+                            <span className={`inline-flex items-center px-2.5 py-1 text-xs rounded-full font-medium border ${statusBadgeClass(m.status)}`}>
+                              {m.status}
+                            </span>
+                          ) : (
+                            (c.get(m) || "-")
+                          )}
+                        </td>
+                      ))}
                       <td className="py-4 px-6 text-right">
                         <div className="flex justify-end gap-2">
                           <button
