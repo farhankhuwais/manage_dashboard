@@ -343,7 +343,30 @@ function MembersPage({ token }: { token: string }) {
 
   const exportExcel = () => {
     const rows = buildExportRows();
+    if (!rows.length) {
+      alert('Tidak ada data untuk diekspor.');
+      return;
+    }
     const ws = XLSX.utils.json_to_sheet(rows);
+    const headers = Object.keys(rows[0]);
+    ws['!cols'] = headers.map((h) => {
+      const maxLen = Math.max(h.length, ...rows.map((r) => String(r[h] ?? '').length));
+      return { wch: Math.min(Math.max(maxLen + 2, 8), 40) };
+    });
+    const range = XLSX.utils.decode_range(ws['!ref']!);
+    for (let c = range.s.c; c <= range.e.c; c++) {
+      const cell = ws[XLSX.utils.encode_cell({ r: 0, c })];
+      if (cell) {
+        cell.s = {
+          font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 10 },
+          fill: { fgColor: { rgb: '2563EB' } },
+          alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+          border: { bottom: { style: 'thin', color: { rgb: '1E293B' } } },
+        };
+      }
+    }
+    ws['!rows'] = [{ hpt: 30 }];
+    ws['!freeze'] = { xSplit: 1, ySplit: 1 };
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Data Jemaat');
     XLSX.writeFile(wb, `Data-Jemaat-${new Date().toISOString().slice(0, 10)}.xlsx`);
