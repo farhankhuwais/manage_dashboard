@@ -1,0 +1,314 @@
+import { useEffect, useState } from 'react';
+import { Users, ReceiptText, LogOut, LayoutDashboard, Menu, X, Trash2 } from 'lucide-react';
+import DuesPage from './DuesPage';
+import LoginPage from './LoginPage';
+
+interface Member {
+  id: number;
+  name: string;
+  status: string;
+}
+
+function MembersPage({ token }: { token: string }) {
+  const [members, setMembers] = useState<Member[]>([]);
+  const [name, setName] = useState('');
+  const [status, setStatus] = useState('Aktif');
+  const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const fetchMembers = async () => {
+    try {
+      const res = await fetch('/api/members', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem('token');
+        window.location.reload();
+        return;
+      }
+      const data = await res.json();
+      if (res.ok && Array.isArray(data)) {
+        setMembers(data);
+      } else {
+        setMembers([]);
+      }
+    } catch (error) {
+      setMembers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMembers();
+  }, [token]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      const res = await fetch('/api/members', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ name, status }),
+      });
+      if (res.ok) {
+        setName('');
+        fetchMembers();
+      } else {
+        const errorData = await res.json();
+        alert(errorData.error || 'Terjadi kesalahan saat menambahkan jemaat');
+      }
+    } catch (error) {
+      console.error('Failed to add member', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (id: number, name: string) => {
+    if (!window.confirm(`Apakah Anda yakin ingin menghapus data jemaat "${name}"? Data persembahan terkait mungkin ikut terhapus atau menyebabkan error.`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/members/${id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        fetchMembers();
+      } else {
+        const errorData = await res.json();
+        alert(errorData.error || 'Gagal menghapus data jemaat');
+      }
+    } catch (error) {
+      console.error('Failed to delete member', error);
+      alert('Terjadi kesalahan jaringan');
+    }
+  };
+
+  return (
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="bg-white p-6 rounded-2xl shadow-sm mb-8 border border-slate-100">
+        <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+          <Users className="w-5 h-5 text-blue-500" />
+          Tambah Jemaat Baru
+        </h2>
+        <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-4">
+          <input
+            type="text"
+            placeholder="Nama Jemaat"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="flex-1 px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+            required
+          />
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className="px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 bg-white transition-all min-w-[150px]"
+          >
+            <option value="Aktif">Aktif</option>
+            <option value="Tidak Aktif">Tidak Aktif</option>
+            <option value="Pindah">Pindah</option>
+          </select>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 shadow-md shadow-blue-500/20 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center min-w-[120px]"
+          >
+            {isSubmitting ? (
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+            ) : (
+              'Simpan'
+            )}
+          </button>
+        </form>
+      </div>
+
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+        <h2 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+          <LayoutDashboard className="w-5 h-5 text-blue-500" />
+          Daftar Jemaat
+        </h2>
+        
+        {loading ? (
+          <div className="py-12 flex justify-center">
+            <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+          </div>
+        ) : (
+          <div className="overflow-x-auto rounded-xl border border-slate-100">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50/80 border-b border-slate-100">
+                  <th className="py-4 px-6 font-semibold text-slate-600 text-sm">ID</th>
+                  <th className="py-4 px-6 font-semibold text-slate-600 text-sm">Nama Jemaat</th>
+                  <th className="py-4 px-6 font-semibold text-slate-600 text-sm">Status</th>
+                  <th className="py-4 px-6 font-semibold text-slate-600 text-sm text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {members.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="py-12 text-center text-slate-400">
+                      Belum ada data jemaat yang terdaftar.
+                    </td>
+                  </tr>
+                ) : (
+                  members.map((m) => (
+                    <tr key={m.id} className="border-b border-slate-50 hover:bg-blue-50/30 transition-colors group">
+                      <td className="py-4 px-6 text-slate-500">#{m.id}</td>
+                      <td className="py-4 px-6 font-medium text-slate-700">{m.name}</td>
+                      <td className="py-4 px-6">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-1 text-xs rounded-full font-medium border ${
+                            m.status === 'Aktif'
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              : m.status === 'Pindah'
+                              ? 'bg-amber-50 text-amber-700 border-amber-200'
+                              : 'bg-rose-50 text-rose-700 border-rose-200'
+                          }`}
+                        >
+                          {m.status}
+                        </span>
+                      </td>
+                      <td className="py-4 px-6 text-right">
+                        <button
+                          onClick={() => handleDelete(m.id, m.name)}
+                          className="p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-600 rounded-lg transition-colors"
+                          title="Hapus Jemaat"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+  const [activeTab, setActiveTab] = useState<'members' | 'dues'>('members');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  if (!token) {
+    return (
+      <LoginPage 
+        onLoginSuccess={(newToken) => {
+          localStorage.setItem('token', newToken);
+          setToken(newToken);
+        }} 
+      />
+    );
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setToken(null);
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row font-sans">
+      
+      {/* Mobile Header */}
+      <div className="md:hidden bg-white border-b p-4 flex justify-between items-center sticky top-0 z-20 shadow-sm">
+        <div className="font-bold text-xl text-blue-900 tracking-tight">E-Gereja</div>
+        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 bg-slate-100 rounded-lg">
+          {isMobileMenuOpen ? <X className="w-5 h-5 text-slate-600" /> : <Menu className="w-5 h-5 text-slate-600" />}
+        </button>
+      </div>
+
+      {/* Sidebar */}
+      <aside className={`
+        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} 
+        md:translate-x-0 
+        fixed md:sticky top-0 left-0 z-10 
+        w-72 h-screen bg-slate-900 text-slate-300 
+        transition-transform duration-300 ease-in-out
+        flex flex-col shadow-2xl md:shadow-none
+      `}>
+        <div className="p-8 hidden md:block">
+          <h1 className="text-3xl font-extrabold text-white tracking-tighter">
+            E-Gereja<span className="text-blue-500">.</span>
+          </h1>
+          <p className="text-slate-400 text-sm mt-2">Dashboard Management</p>
+        </div>
+
+        <nav className="flex-1 px-4 py-8 md:py-0 space-y-2 overflow-y-auto">
+          <button
+            onClick={() => { setActiveTab('members'); setIsMobileMenuOpen(false); }}
+            className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 ${
+              activeTab === 'members'
+                ? 'bg-blue-600/10 text-blue-400 font-semibold'
+                : 'hover:bg-slate-800 hover:text-white'
+            }`}
+          >
+            <Users className={`w-5 h-5 ${activeTab === 'members' ? 'text-blue-500' : ''}`} />
+            Data Jemaat
+          </button>
+          
+          <button
+            onClick={() => { setActiveTab('dues'); setIsMobileMenuOpen(false); }}
+            className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 ${
+              activeTab === 'dues'
+                ? 'bg-blue-600/10 text-blue-400 font-semibold'
+                : 'hover:bg-slate-800 hover:text-white'
+            }`}
+          >
+            <ReceiptText className={`w-5 h-5 ${activeTab === 'dues' ? 'text-blue-500' : ''}`} />
+            Pencatatan Persembahan
+          </button>
+        </nav>
+
+        <div className="p-4 border-t border-slate-800">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-800 text-slate-300 rounded-xl hover:bg-rose-500/10 hover:text-rose-400 transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            <span className="font-medium">Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <main className="flex-1 overflow-y-auto h-screen relative">
+        <div className="max-w-6xl mx-auto p-4 md:p-8 lg:p-12">
+          
+          <header className="mb-10 hidden md:block">
+            <h2 className="text-3xl font-bold text-slate-900 tracking-tight">
+              {activeTab === 'members' ? 'Manajemen Jemaat' : 'Pencatatan Persembahan'}
+            </h2>
+            <p className="text-slate-500 mt-1">
+              Kelola data gereja dengan cepat dan aman.
+            </p>
+          </header>
+
+          <div className="relative">
+            {activeTab === 'members' && <MembersPage token={token} />}
+            {activeTab === 'dues' && <DuesPage token={token} />}
+          </div>
+
+        </div>
+      </main>
+
+    </div>
+  );
+}
+
+export default App;
