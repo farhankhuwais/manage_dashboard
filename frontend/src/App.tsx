@@ -290,9 +290,8 @@ function App() {
       <aside className={`
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} 
         md:translate-x-0 
-        fixed md:sticky top-0 left-0 z-10 
+        fixed md:sticky top-0 left-0 z-30 md:z-10 
         w-72 h-[100dvh] md:h-screen bg-slate-900 text-slate-300 
-        pt-16 md:pt-0
         transition-transform duration-300 ease-in-out
         flex flex-col shadow-2xl md:shadow-none
       `}>
@@ -301,6 +300,14 @@ function App() {
             E-Gereja<span className="text-blue-500">.</span>
           </h1>
           <p className="text-slate-400 text-sm mt-2">Dashboard Management</p>
+        </div>
+
+        {/* Mobile sidebar header (own bar so nav clears the page header) */}
+        <div className="md:hidden flex items-center justify-between p-4 border-b border-slate-800">
+          <span className="font-bold text-lg text-white tracking-tight">E-Gereja</span>
+          <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 bg-slate-800 rounded-lg" aria-label="Tutup menu">
+            <X className="w-5 h-5 text-slate-300" />
+          </button>
         </div>
 
         <nav className="flex-1 px-4 py-8 md:py-0 space-y-2 overflow-y-auto">
