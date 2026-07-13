@@ -8,6 +8,26 @@ import offeringsRoutes from "./routes/offerings.js";
 import { authenticateToken } from "./middleware/authMiddleware.js";
 
 const app = express();
+
+// Vercel serverless sering mem-buffer body request ke req.body (Buffer/String)
+// sehingga stream kosong saat express.json membacanya -> 400 "Bad Request" pada
+// POST. Middleware ini mem-parsing body yg sudah di-buffer agar express.json skip.
+app.use((req, _res, next) => {
+  const raw = (req as any).body;
+  if (raw && typeof raw === "object" && !Buffer.isBuffer(raw)) {
+    (req as any)._body = true;
+    return next();
+  }
+  if (raw !== undefined && raw !== null && (Buffer.isBuffer(raw) || typeof raw === "string")) {
+    try {
+      (req as any).body = JSON.parse(Buffer.isBuffer(raw) ? raw.toString("utf8") : raw);
+    } catch {
+      // biarkan express.json yg mengembalikan 400 jika JSON rusak
+    }
+    (req as any)._body = true;
+  }
+  next();
+});
 app.use(express.json());
 
 app.get("/api/health", (req, res) => {
