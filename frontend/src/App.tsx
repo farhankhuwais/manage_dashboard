@@ -303,18 +303,53 @@ function MembersPage({ token }: { token: string }) {
     setInfo({});
   };
 
+  const totalCount = members.length;
+  const aktifCount = members.filter((m) => m.status === 'Aktif').length;
+  const pindahCount = members.filter((m) => m.status === 'Pindah').length;
+  const simpatisanCount = members.filter((m) => (m.statusAnggota ?? 'Jemaat') === 'Simpatisan').length;
+
+  const STAT_CARDS = [
+    { label: 'Total Jemaat', value: totalCount, icon: Users, grad: 'from-blue-500 to-indigo-600' },
+    { label: 'Aktif', value: aktifCount, icon: Heart, grad: 'from-emerald-500 to-teal-600' },
+    { label: 'Pindah', value: pindahCount, icon: Landmark, grad: 'from-amber-500 to-orange-600' },
+    { label: 'Simpatisan', value: simpatisanCount, icon: Users2, grad: 'from-violet-500 to-purple-600' },
+  ];
+
+  const SECTION_DOT = ['bg-blue-500', 'bg-emerald-500', 'bg-violet-500', 'bg-amber-500'];
+
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="bg-white p-6 rounded-2xl shadow-sm mb-8 border border-slate-100">
-        <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-          <Users className="w-5 h-5 text-blue-500" />
-          {editingMemberId ? 'Edit Jemaat' : 'Tambah Jemaat Baru'}
-        </h2>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {STAT_CARDS.map((s) => (
+          <div key={s.label} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 flex items-center gap-3 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+            <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${s.grad} flex items-center justify-center shrink-0`}>
+              <s.icon className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-xs text-slate-500">{s.label}</p>
+              <p className="text-xl font-extrabold text-slate-800">{s.value}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="bg-white p-6 rounded-2xl shadow-sm mb-8 border border-slate-100 border-t-4 border-t-blue-500">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center shadow-md shadow-blue-500/30">
+            <Users className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-slate-800 leading-tight">
+              {editingMemberId ? 'Edit Jemaat' : 'Tambah Jemaat Baru'}
+            </h2>
+            <p className="text-xs text-slate-400 mt-0.5">Kelola data keanggotaan jemaat</p>
+          </div>
+        </div>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {FORM_SECTIONS.map((section) => (
-            <div key={section.title} className="rounded-xl border border-slate-100 p-4">
+          {FORM_SECTIONS.map((section, i) => (
+            <div key={section.title} className="rounded-xl border border-slate-100 p-4 hover:border-blue-200 transition-colors">
               <h3 className="text-sm font-semibold text-slate-700 mb-3 pb-2 border-b border-slate-100 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                <span className={`w-2 h-2 rounded-full ${SECTION_DOT[i % SECTION_DOT.length]}`}></span>
                 {section.title}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -424,27 +459,32 @@ function MembersPage({ token }: { token: string }) {
         </form>
       </div>
 
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-        <h2 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-          <LayoutDashboard className="w-5 h-5 text-blue-500" />
-          Daftar Jemaat
-        </h2>
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 border-t-4 border-t-indigo-500">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-indigo-500 flex items-center justify-center shadow-md shadow-indigo-500/30">
+              <LayoutDashboard className="w-5 h-5 text-white" />
+            </div>
+            <h2 className="text-lg font-bold text-slate-800">Daftar Jemaat</h2>
+          </div>
+          <span className="text-xs text-slate-500 bg-slate-100 px-3 py-1 rounded-full">{filtered.length} data</span>
+        </div>
 
-        <div className="flex flex-col md:flex-row gap-3 mb-5">
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+        <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center mb-4">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Cari nama, NIK, atau No. Telp..."
-              className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 text-sm bg-white"
+              placeholder="Cari nama atau alamat..."
+              className="w-full border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-300"
             />
           </div>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 bg-white"
+            className="border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-300"
           >
             <option value="">Semua Status</option>
             <option value="Aktif">Aktif</option>
@@ -480,7 +520,7 @@ function MembersPage({ token }: { token: string }) {
           <div className="overflow-x-auto rounded-xl border border-slate-100">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50/80 border-b border-slate-100">
+                <tr className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-slate-100">
                   <th className="py-4 px-6 font-semibold text-slate-600 text-sm">No</th>
                   {TABLE_COLUMNS.map((c) => (
                     <th key={c.label} className="py-4 px-6 font-semibold text-slate-600 text-sm whitespace-nowrap">{c.label}</th>
