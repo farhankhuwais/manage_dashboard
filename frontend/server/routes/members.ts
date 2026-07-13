@@ -71,6 +71,30 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+router.post("/bulk", async (req, res) => {
+  const list = req.body;
+  if (!Array.isArray(list) || list.length === 0) {
+    return res.status(400).json({ error: "Data tidak valid" });
+  }
+
+  try {
+    await ensureMembersColumns();
+    const values: any[] = [];
+    for (const item of list) {
+      if (!item || typeof item.name !== "string" || !item.name.trim()) continue;
+      const status = typeof item.status === "string" && item.status.trim() ? item.status.trim() : "Aktif";
+      values.push({ name: item.name.trim(), status, ...buildExtra(item) });
+    }
+    if (values.length === 0) {
+      return res.status(400).json({ error: "Tidak ada baris valid (kolom Nama kosong)" });
+    }
+    await db.insert(members).values(values);
+    res.status(201).json({ message: `${values.length} jemaat ditambahkan`, inserted: values.length });
+  } catch (error: any) {
+    res.status(500).json({ error: "Gagal import data jemaat", cause: error?.message });
+  }
+});
+
 router.put("/:id", async (req, res) => {
   const id = parseId(req.params.id);
   if (id === null) {

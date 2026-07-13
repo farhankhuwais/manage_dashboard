@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Users, ReceiptText, LogOut, LayoutDashboard, Menu, X, Trash2, ShieldCheck, Landmark, Search, BarChart3, Church, Home, Users2, Briefcase, Heart, Droplets, GraduationCap, FileSpreadsheet, FileText } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Users, ReceiptText, LogOut, LayoutDashboard, Menu, X, Trash2, ShieldCheck, Landmark, Search, BarChart3, Church, Home, Users2, Briefcase, Heart, Droplets, GraduationCap, FileSpreadsheet, FileText, FileUp } from 'lucide-react';
 import DuesPage from './DuesPage';
 import LoginPage from './LoginPage';
 import UsersPage from './UsersPage';
@@ -152,6 +152,19 @@ const TABLE_COLUMNS: TableColumn[] = (() => {
     withoutPosisi.push(statusCol);
   }
   return withoutPosisi;
+})();
+
+const LABEL_TO_KEY: Record<string, string> = (() => {
+  const map: Record<string, string> = {};
+  for (const section of FORM_SECTIONS) {
+    for (const f of section.fields) {
+      if (f.type === "name") map["Nama Lengkap"] = "name";
+      else if (f.type === "status") map["Status"] = "status";
+      else if (f.type === "statusAnggota") map["Status Anggota"] = "statusAnggota";
+      else map[f.label] = f.key;
+    }
+  }
+  return map;
 })();
 
 const statusBadgeClass = (status?: string) =>
@@ -341,6 +354,44 @@ function MembersPage({ token }: { token: string }) {
     doc.save(`Data-Jemaat-${new Date().toISOString().slice(0, 10)}.pdf`);
   };
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: "array" });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws);
+      const payload = rows.map((r) => {
+        const obj: Record<string, unknown> = {};
+        for (const [label, val] of Object.entries(r)) {
+          const key = LABEL_TO_KEY[label?.toString().trim()];
+          if (key) obj[key] = val == null ? "" : String(val);
+        }
+        return obj;
+      });
+      const res = await fetch("/api/members/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        const d = await res.json();
+        await fetchMembers();
+        alert(`Import berhasil: ${d.inserted ?? payload.length} jemaat ditambahkan`);
+      } else {
+        const d = await res.json();
+        alert(d.error || "Gagal import data");
+      }
+    } catch (err) {
+      alert("Gagal membaca file Excel. Pastikan format .xlsx/.csv benar.");
+    } finally {
+      e.target.value = "";
+    }
+  };
+
   const totalCount = members.length;
   const aktifCount = members.filter((m) => m.status === 'Aktif').length;
   const kepalaKeluargaCount = members.filter((m) => (m.statusKeluarga ?? '') === 'Kepala Keluarga').length;
@@ -507,6 +558,14 @@ function MembersPage({ token }: { token: string }) {
             </div>
             <div className="flex items-center gap-2">
               <button
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+                title="Import dari Excel"
+              >
+                <FileUp className="w-4 h-4" />
+                Import
+              </button>
+              <button
                 onClick={exportExcel}
                 className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors"
                 title="Export ke Excel"
@@ -524,6 +583,13 @@ function MembersPage({ token }: { token: string }) {
               </button>
               <span className="text-xs text-slate-500 bg-slate-100 px-3 py-1 rounded-full">{filtered.length} data</span>
             </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              className="hidden"
+              onChange={handleImportFile}
+            />
           </div>
 
         <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center mb-4">
