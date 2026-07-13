@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Users, ReceiptText, LogOut, LayoutDashboard, Menu, X, Trash2, ShieldCheck, Landmark, Search, BarChart3, Church, Home, Users2, Briefcase, Heart, Droplets, GraduationCap, FileSpreadsheet, FileText, FileUp } from 'lucide-react';
+import { Users, ReceiptText, LogOut, LayoutDashboard, Menu, X, Trash2, ShieldCheck, Landmark, Search, BarChart3, Church, Home, Users2, Briefcase, Heart, Droplets, GraduationCap, FileSpreadsheet, FileText, FileUp, Download } from 'lucide-react';
 import DuesPage from './DuesPage';
 import LoginPage from './LoginPage';
 import UsersPage from './UsersPage';
@@ -196,6 +196,7 @@ function MembersPage({ token }: { token: string }) {
   const [filterStatus, setFilterStatus] = useState('');
   const [filterAnggota, setFilterAnggota] = useState('');
   const [filterKomisi, setFilterKomisi] = useState('');
+  const [upsertMode, setUpsertMode] = useState(false);
 
   const filtered = members.filter((m) => {
     const q = search.trim().toLowerCase();
@@ -375,12 +376,12 @@ function MembersPage({ token }: { token: string }) {
       const res = await fetch("/api/members/bulk", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ upsert: upsertMode, data: payload }),
       });
       if (res.ok) {
         const d = await res.json();
         await fetchMembers();
-        alert(`Import berhasil: ${d.inserted ?? payload.length} jemaat ditambahkan`);
+        alert(`Import selesai: ${d.message}`);
       } else {
         const d = await res.json();
         alert(d.error || "Gagal import data");
@@ -390,6 +391,15 @@ function MembersPage({ token }: { token: string }) {
     } finally {
       e.target.value = "";
     }
+  };
+
+  const downloadTemplate = () => {
+    const header = ['No', ...TABLE_COLUMNS.map((c) => c.label)];
+    const emptyRows = Array.from({ length: 10 }, () => header.map(() => ''));
+    const ws = XLSX.utils.aoa_to_sheet([header, ...emptyRows]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Template');
+    XLSX.writeFile(wb, 'Template-Import-Jemaat.xlsx');
   };
 
   const totalCount = members.length;
@@ -556,7 +566,7 @@ function MembersPage({ token }: { token: string }) {
               </div>
               <h2 className="text-lg font-bold text-slate-800">Daftar Jemaat</h2>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={() => fileInputRef.current?.click()}
                 className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
@@ -564,6 +574,23 @@ function MembersPage({ token }: { token: string }) {
               >
                 <FileUp className="w-4 h-4" />
                 Import
+              </button>
+              <label className="flex items-center gap-1.5 px-2.5 py-2 text-xs font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors" title="Jika nama sudah ada, data lama diganti dengan yang baru">
+                <input
+                  type="checkbox"
+                  checked={upsertMode}
+                  onChange={(e) => setUpsertMode(e.target.checked)}
+                  className="w-3.5 h-3.5 accent-blue-600"
+                />
+                Upsert by Nama
+              </label>
+              <button
+                onClick={downloadTemplate}
+                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                title="Unduh template Excel kosong"
+              >
+                <Download className="w-4 h-4" />
+                Template
               </button>
               <button
                 onClick={exportExcel}

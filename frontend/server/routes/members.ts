@@ -72,24 +72,49 @@ router.delete("/:id", async (req, res) => {
 });
 
 router.post("/bulk", async (req, res) => {
-  const list = req.body;
+  const body = req.body;
+  const list = Array.isArray(body) ? body : body?.data;
+  const upsert = body?.upsert === true;
   if (!Array.isArray(list) || list.length === 0) {
     return res.status(400).json({ error: "Data tidak valid" });
   }
 
   try {
     await ensureMembersColumns();
-    const values: any[] = [];
+    let inserted = 0;
+    let updated = 0;
+    let skipped = 0;
     for (const item of list) {
-      if (!item || typeof item.name !== "string" || !item.name.trim()) continue;
+      if (!item || typeof item.name !== "string" || !item.name.trim()) {
+        skipped++;
+        continue;
+      }
+      const name = item.name.trim();
       const status = typeof item.status === "string" && item.status.trim() ? item.status.trim() : "Aktif";
-      values.push({ name: item.name.trim(), status, ...buildExtra(item) });
+      const vals = { name, status, ...buildExtra(item) };
+      const existing = await db
+        .select({ id: members.id })
+        .from(members)
+        .where(eq(members.name, name))
+        .limit(1);
+      if (existing.length > 0) {
+        if (upsert) {
+          await db.update(members).set(vals).where(eq(members.id, existing[0].id));
+          updated++;
+        } else {
+          skipped++;
+        }
+      } else {
+        await db.insert(members).values(vals);
+        inserted++;
+      }
     }
-    if (values.length === 0) {
-      return res.status(400).json({ error: "Tidak ada baris valid (kolom Nama kosong)" });
-    }
-    await db.insert(members).values(values);
-    res.status(201).json({ message: `${values.length} jemaat ditambahkan`, inserted: values.length });
+    res.status(201).json({
+      message: `${inserted} ditambah, ${updated} diperbarui, ${skipped} dilewati`,
+      inserted,
+      updated,
+      skipped,
+    });
   } catch (error: any) {
     res.status(500).json({ error: "Gagal import data jemaat", cause: error?.message });
   }
