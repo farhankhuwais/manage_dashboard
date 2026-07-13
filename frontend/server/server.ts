@@ -6,8 +6,15 @@ import duesRoutes from "./routes/dues.js";
 import usersRoutes from "./routes/users.js";
 import offeringsRoutes from "./routes/offerings.js";
 import { authenticateToken } from "./middleware/authMiddleware.js";
+import { ensureMembersColumns } from "./db/index.js";
 
 const app = express();
+
+// Pastikan kolom `members` (data jemaat lengkap) ada di DB production.
+// Idempoten; aman dijalankan di setiap cold-start Vercel.
+ensureMembersColumns().catch((err) =>
+  console.error("ensureMembersColumns gagal:", err?.message)
+);
 
 // Vercel serverless sering mem-buffer body request ke req.body (Buffer/String)
 // sehingga stream kosong saat express.json membacanya -> 400 "Bad Request" pada

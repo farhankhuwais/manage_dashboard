@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db } from "../db/index";
+import { db, ensureMembersColumns } from "../db/index";
 import { members } from "../db/schema";
 import { eq } from "drizzle-orm";
 
@@ -12,6 +12,7 @@ const parseId = (raw: string): number | null => {
 
 router.get("/", async (req, res) => {
   try {
+    await ensureMembersColumns();
     const data = await db.select().from(members);
     res.json(data);
   } catch (error) {
@@ -48,10 +49,11 @@ router.post("/", async (req, res) => {
   }
 
   try {
+    await ensureMembersColumns();
     await db.insert(members).values({ name: name.trim(), status: status.trim(), ...buildExtra(req.body) });
     res.status(201).json({ message: "Jemaat ditambahkan" });
-  } catch (error) {
-    res.status(500).json({ error: "Gagal menambahkan jemaat" });
+  } catch (error: any) {
+    res.status(500).json({ error: "Gagal menambahkan jemaat", cause: error?.message });
   }
 });
 
@@ -82,6 +84,7 @@ router.put("/:id", async (req, res) => {
   }
 
   try {
+    await ensureMembersColumns();
     const updated = await db
       .update(members)
       .set({ name: name.trim(), status: status.trim(), ...buildExtra(req.body) })
