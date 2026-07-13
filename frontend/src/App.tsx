@@ -625,19 +625,27 @@ function OverviewPage({ token }: { token: string }) {
                   <h3 className="font-bold text-slate-800">{f.label}</h3>
                   <span className="text-xs text-slate-400">{total}</span>
                 </div>
-                <div className="space-y-2">
-                  {rows.map((r) => (
-                    <div key={r.label} className="flex items-center justify-between text-sm">
-                      <span className="text-slate-600 truncate pr-2">{r.label}</span>
-                      <span
-                        className={`shrink-0 font-semibold rounded-full px-2.5 py-0.5 ${
-                          r.count === 0 ? 'bg-slate-50 text-slate-400' : 'bg-blue-50 text-blue-600'
-                        }`}
-                      >
-                        {r.count}
-                      </span>
-                    </div>
-                  ))}
+                <div className="space-y-3">
+                  {rows.map((r) => {
+                    const pct = total > 0 ? Math.round((r.count / total) * 100) : 0;
+                    return (
+                      <div key={r.label}>
+                        <div className="flex items-center justify-between text-sm mb-1">
+                          <span className="text-slate-600 truncate pr-2">{r.label}</span>
+                          <span className="shrink-0 text-slate-500">
+                            {r.count}
+                            <span className="text-slate-300 ml-1">({pct}%)</span>
+                          </span>
+                        </div>
+                        <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${r.count === 0 ? 'bg-slate-200' : 'bg-blue-500'}`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             );
