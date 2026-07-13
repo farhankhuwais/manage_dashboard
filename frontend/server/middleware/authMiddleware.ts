@@ -14,7 +14,9 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
 
   jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) return res.sendStatus(403);
-    req.user = user;
+    if (typeof user === "string" || !user) return res.sendStatus(403);
+    const payload = user as { id: number; role: string };
+    req.user = { id: payload.id, role: payload.role };
     next();
   });
 };

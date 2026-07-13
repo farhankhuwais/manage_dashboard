@@ -65,7 +65,7 @@ router.post("/", requireAdmin, async (req: AuthRequest, res) => {
 
 // PUT /api/users/:id - Edit akun pengurus
 router.put("/:id", requireAdmin, async (req: AuthRequest, res) => {
-  const id = parseId(req.params.id);
+  const id = parseId(Array.isArray(req.params.id) ? req.params.id[0]! : req.params.id);
   if (id === null) {
     return res.status(400).json({ error: "ID pengguna tidak valid" });
   }
