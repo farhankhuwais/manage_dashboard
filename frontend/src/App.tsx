@@ -82,9 +82,9 @@ const FORM_SECTIONS: { title: string; fields: FormField[] }[] = [
   {
     title: "Data Keanggotaan",
     fields: [
-      { type: "statusAnggota" },
       { type: "select", key: "statusWarga", label: "Status Warga", options: ["Warga Gereja", "Bukan Warga Gereja"] },
       { type: "select", key: "statusKeluarga", label: "Status Keluarga", options: ["Kepala Keluarga"] },
+      { type: "statusAnggota" },
       { type: "select", key: "komisi", label: "Komisi", options: ["Anak", "Youth", "Pemuda", "Muda", "Dewasa", "Usin", "non"] },
       { type: "name" },
       { type: "status" },
