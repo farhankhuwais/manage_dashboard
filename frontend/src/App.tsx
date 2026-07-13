@@ -350,7 +350,12 @@ function MembersPage({ token }: { token: string }) {
   };
 
   const exportPdf = () => {
-    const doc = new jsPDF({ orientation: 'landscape' });
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+    const today = new Date().toLocaleDateString('id-ID', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    });
     const head = [['No', ...TABLE_COLUMNS.map((c) => c.label)]];
     const body = filtered.map((m, i) => [
       String(i + 1),
@@ -362,8 +367,46 @@ function MembersPage({ token }: { token: string }) {
     autoTable(doc, {
       head,
       body,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [79, 70, 229] },
+      startY: 58,
+      margin: { left: 24, right: 24, top: 58, bottom: 42 },
+      horizontalPageBreak: true,
+      theme: 'grid',
+      styles: {
+        fontSize: 7,
+        cellPadding: 3,
+        overflow: 'linebreak',
+        valign: 'middle',
+        lineColor: [226, 232, 240],
+        lineWidth: 0.5,
+        textColor: [30, 41, 59],
+      },
+      headStyles: {
+        fillColor: [37, 99, 235],
+        textColor: 255,
+        fontStyle: 'bold',
+        halign: 'center',
+        valign: 'middle',
+        fontSize: 7,
+      },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      columnStyles: { 0: { cellWidth: 26, halign: 'center' } },
+      didDrawPage: (data) => {
+        const pw = doc.internal.pageSize.getWidth();
+        const ph = doc.internal.pageSize.getHeight();
+        const ml = data.settings.margin.left;
+        const mr = data.settings.margin.right;
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.setTextColor(30, 41, 59);
+        doc.text('Data Jemaat', ml, 30);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(100, 116, 139);
+        doc.text(`Diekspor: ${today}   •   ${filtered.length} data`, ml, 46);
+        doc.setFontSize(8);
+        doc.setTextColor(148, 163, 184);
+        doc.text(`Halaman ${data.pageNumber}`, pw - mr, ph - 22, { align: 'right' });
+      },
     });
     doc.save(`Data-Jemaat-${new Date().toISOString().slice(0, 10)}.pdf`);
   };
