@@ -62,8 +62,8 @@ router.post("/login", async (req, res) => {
         role: user.role
       }
     });
-  } catch (error) {
-    res.status(500).json({ error: "Server error: " + (error instanceof Error ? error.message : String(error)) });
+  } catch (error: any) {
+    res.status(500).json({ error: "Server error: " + (error?.cause?.message || error?.message || String(error)) });
   }
 });
 
