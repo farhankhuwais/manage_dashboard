@@ -38,4 +38,19 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+router.put("/:id", async (req, res) => {
+  const { id } = req.params;
+  const { name, status } = req.body;
+  if (!name || !status) {
+    return res.status(400).json({ error: "Nama dan status wajib diisi" });
+  }
+
+  try {
+    await db.update(members).set({ name, status }).where(eq(members.id, parseInt(id)));
+    res.json({ message: "Jemaat berhasil diperbarui" });
+  } catch (error) {
+    res.status(500).json({ error: "Gagal memperbarui jemaat" });
+  }
+});
+
 export default router;

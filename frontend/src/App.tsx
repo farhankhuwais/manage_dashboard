@@ -16,6 +16,7 @@ function MembersPage({ token }: { token: string }) {
   const [status, setStatus] = useState('Aktif');
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingMemberId, setEditingMemberId] = useState<number | null>(null);
 
   const fetchMembers = async () => {
     try {
@@ -50,8 +51,11 @@ function MembersPage({ token }: { token: string }) {
 
     setIsSubmitting(true);
     try {
-      const res = await fetch('/api/members', {
-        method: 'POST',
+      const url = editingMemberId ? `/api/members/${editingMemberId}` : '/api/members';
+      const method = editingMemberId ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: { 
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
@@ -60,6 +64,8 @@ function MembersPage({ token }: { token: string }) {
       });
       if (res.ok) {
         setName('');
+        setStatus('Aktif');
+        setEditingMemberId(null);
         fetchMembers();
       } else {
         const errorData = await res.json();
@@ -96,12 +102,24 @@ function MembersPage({ token }: { token: string }) {
     }
   };
 
+  const handleEditClick = (member: Member) => {
+    setEditingMemberId(member.id);
+    setName(member.name);
+    setStatus(member.status);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingMemberId(null);
+    setName('');
+    setStatus('Aktif');
+  };
+
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="bg-white p-6 rounded-2xl shadow-sm mb-8 border border-slate-100">
         <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
           <Users className="w-5 h-5 text-blue-500" />
-          Tambah Jemaat Baru
+          {editingMemberId ? 'Edit Jemaat' : 'Tambah Jemaat Baru'}
         </h2>
         <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-4">
           <input
@@ -121,17 +139,28 @@ function MembersPage({ token }: { token: string }) {
             <option value="Tidak Aktif">Tidak Aktif</option>
             <option value="Pindah">Pindah</option>
           </select>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 shadow-md shadow-blue-500/20 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center min-w-[120px]"
-          >
-            {isSubmitting ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-            ) : (
-              'Simpan'
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 shadow-md shadow-blue-500/20 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center min-w-[120px]"
+            >
+              {isSubmitting ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              ) : (
+                editingMemberId ? 'Simpan' : 'Tambah'
+              )}
+            </button>
+            {editingMemberId && (
+              <button
+                type="button"
+                onClick={handleCancelEdit}
+                className="px-6 py-3 bg-white text-slate-700 font-semibold border border-slate-200 rounded-xl hover:bg-slate-50 transition-all active:scale-95"
+              >
+                Batal
+              </button>
             )}
-          </button>
+          </div>
         </form>
       </div>
 
@@ -182,13 +211,22 @@ function MembersPage({ token }: { token: string }) {
                         </span>
                       </td>
                       <td className="py-4 px-6 text-right">
-                        <button
-                          onClick={() => handleDelete(m.id, m.name)}
-                          className="p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-600 rounded-lg transition-colors"
-                          title="Hapus Jemaat"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => handleEditClick(m)}
+                            className="text-sm px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors"
+                            title="Edit Jemaat"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(m.id, m.name)}
+                            className="p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-600 rounded-lg transition-colors"
+                            title="Hapus Jemaat"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
