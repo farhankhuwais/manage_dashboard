@@ -51,7 +51,7 @@ export default function DuesPage({ token }: { token: string }) {
       }
       return acc;
     }, {} as Record<string, { name: string, total: number, week: number }>);
-    
+
     return Object.values(grouped).sort((a, b) => a.week - b.week);
   }, [dues, year]);
 
@@ -62,7 +62,7 @@ export default function DuesPage({ token }: { token: string }) {
         fetch('/api/dues', { headers }),
         fetch('/api/members', { headers })
       ]);
-      
+
       if (duesRes.status === 401 || duesRes.status === 403) {
         localStorage.removeItem('token');
         window.location.reload();
@@ -71,7 +71,7 @@ export default function DuesPage({ token }: { token: string }) {
 
       const duesData = await duesRes.json();
       const membersData = await membersRes.json();
-      
+
       if (duesRes.ok && Array.isArray(duesData)) setDues(duesData);
       else setDues([]);
 
@@ -98,7 +98,7 @@ export default function DuesPage({ token }: { token: string }) {
     try {
       const res = await fetch('/api/dues', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
@@ -111,6 +111,10 @@ export default function DuesPage({ token }: { token: string }) {
       });
 
       if (res.ok) {
+        setMemberId('');
+        setAmount(50000);
+        // We keep selectedDate as is, or reset it to today if preferred. Let's reset to today.
+        setSelectedDate(today);
         fetchData(); // Refresh data
       } else {
         const err = await res.json();
@@ -125,7 +129,7 @@ export default function DuesPage({ token }: { token: string }) {
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-      
+
       {/* Cards Section for Dashboard Feel */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg shadow-blue-500/30">
@@ -155,28 +159,28 @@ export default function DuesPage({ token }: { token: string }) {
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis 
-                  dataKey="name" 
-                  axisLine={false} 
-                  tickLine={false} 
+                <XAxis
+                  dataKey="name"
+                  axisLine={false}
+                  tickLine={false}
                   tick={{ fill: '#64748b', fontSize: 12 }}
                   dy={10}
                 />
-                <YAxis 
-                  axisLine={false} 
+                <YAxis
+                  axisLine={false}
                   tickLine={false}
                   tickFormatter={(val) => `Rp ${val.toLocaleString('id-ID')}`}
                   tick={{ fill: '#64748b', fontSize: 12 }}
                   dx={-10}
                 />
-                <Tooltip 
+                <Tooltip
                   formatter={(value: any) => [`Rp ${Number(value || 0).toLocaleString('id-ID')}`, 'Total Persembahan']}
                   contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="total" 
-                  stroke="#3b82f6" 
+                <Line
+                  type="monotone"
+                  dataKey="total"
+                  stroke="#3b82f6"
                   strokeWidth={3}
                   dot={{ r: 4, fill: '#3b82f6', strokeWidth: 2, stroke: '#fff' }}
                   activeDot={{ r: 6, fill: '#1d4ed8', stroke: '#fff' }}
@@ -188,7 +192,7 @@ export default function DuesPage({ token }: { token: string }) {
       )}
 
       <div className="flex flex-col xl:flex-row gap-8">
-        
+
         {/* Form Panel */}
         <div className="xl:w-1/3">
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 sticky top-24">
@@ -249,7 +253,7 @@ export default function DuesPage({ token }: { token: string }) {
                 {isSubmitting ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                 ) : (
-                  'Simpan Setoran'
+                  'Simpan Persembahan'
                 )}
               </button>
             </form>
@@ -260,7 +264,7 @@ export default function DuesPage({ token }: { token: string }) {
         <div className="xl:w-2/3">
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 h-full">
             <h2 className="text-lg font-bold text-slate-800 mb-6">Riwayat Persembahan Masuk</h2>
-            
+
             {loading ? (
               <div className="py-12 flex justify-center">
                 <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
