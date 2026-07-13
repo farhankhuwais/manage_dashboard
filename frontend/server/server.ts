@@ -1,4 +1,5 @@
 import express from "express";
+import { sql } from "drizzle-orm";
 import authRoutes from "./routes/auth.js";
 import membersRoutes from "./routes/members.js";
 import duesRoutes from "./routes/dues.js";
@@ -14,6 +15,11 @@ app.get("/api/health", (req, res) => {
 });
 
 app.get("/api/setup", async (req, res) => {
+  // Endpoint darurat — hanya izinkan di luar production agar tidak bisa
+  // disalahgunakan untuk reset akun admin di deployment live.
+  if (process.env.NODE_ENV === "production") {
+    return res.status(403).json({ error: "Setup tidak diizinkan di environment production" });
+  }
   try {
     const { db } = require("./db/index.js");
     await db.execute(`
@@ -44,16 +50,22 @@ app.get("/api/setup", async (req, res) => {
         "date" timestamp DEFAULT now() NOT NULL
       );
     `);
-    
-    // Seed admin
+
+    // Seed admin — password di-parameterize (cegah SQL injection).
+    // Password WAJIB dari env SETUP_ADMIN_PASSWORD; tanpa itu, tolak seed
+    // agar tidak ada kredensial default yang ter-hardcode.
     const bcrypt = require("bcryptjs");
-    const passwordHash = await bcrypt.hash("bendahara123", 10);
-    await db.execute(`
-      INSERT INTO "users" ("email", "password_hash", "role") 
-      VALUES ('admin@internal.com', '${passwordHash}', 'admin')
-      ON CONFLICT ("email") DO NOTHING;
-    `);
-    
+    const setupPassword = process.env.SETUP_ADMIN_PASSWORD;
+    if (!setupPassword || setupPassword.length < 8) {
+      return res.status(400).json({ error: "SETUP_ADMIN_PASSWORD (min. 8 karakter) wajib di-set di environment untuk seed admin" });
+    }
+    const passwordHash = await bcrypt.hash(setupPassword, 10);
+    await db.execute(
+      sql`INSERT INTO "users" ("email", "password_hash", "role")
+          VALUES ('admin@internal.com', ${passwordHash}, 'admin')
+          ON CONFLICT ("email") DO NOTHING;`
+    );
+
     res.json({ status: "SUCCESS", message: "Database tables and admin user created successfully!" });
   } catch (err: any) {
     res.status(500).json({ error: err.message, cause: err.cause?.message });

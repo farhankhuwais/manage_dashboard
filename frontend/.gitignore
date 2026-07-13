@@ -1,6 +1,12 @@
 # Logs
 logs
 *.log
+
+# Build artifacts (serverless compile output) — jangan di-commit
+*.js.map
+server/**/*.js
+server/**/*.d.ts
+
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

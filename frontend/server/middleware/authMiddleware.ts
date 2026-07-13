@@ -1,10 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-
-const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
+import { JWT_SECRET } from "../config.js";
 
 export interface AuthRequest extends Request {
-  user?: any;
+  user?: { id: number; role: string };
 }
 
 export const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) => {

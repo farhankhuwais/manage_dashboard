@@ -5,6 +5,11 @@ import { eq, desc } from "drizzle-orm";
 
 const router = Router();
 
+const parseId = (raw: string): number | null => {
+  const id = Number(raw);
+  return Number.isInteger(id) && id > 0 ? id : null;
+};
+
 // GET /api/offerings - List semua kas umum
 router.get("/", async (req, res) => {
   try {
@@ -17,13 +22,14 @@ router.get("/", async (req, res) => {
 
 // POST /api/offerings - Tambah kas umum
 router.post("/", async (req, res) => {
-  const { amount, category, description } = req.body;
-  if (!amount || !category) {
-    return res.status(400).json({ error: "Kategori dan Nominal wajib diisi" });
+  const amount = Number(req.body.amount);
+  const { category, description } = req.body;
+  if (!Number.isInteger(amount) || amount <= 0 || typeof category !== "string" || !category.trim()) {
+    return res.status(400).json({ error: "Kategori dan Nominal (positif) wajib diisi" });
   }
 
   try {
-    await db.insert(offerings).values({ amount, category, description });
+    await db.insert(offerings).values({ amount, category: category.trim(), description });
     res.status(201).json({ message: "Data kas berhasil ditambahkan" });
   } catch (error) {
     res.status(500).json({ error: "Gagal menambahkan data kas" });
@@ -32,15 +38,26 @@ router.post("/", async (req, res) => {
 
 // PUT /api/offerings/:id - Update kas umum
 router.put("/:id", async (req, res) => {
-  const { id } = req.params;
-  const { amount, category, description } = req.body;
-  
-  if (!amount || !category) {
-    return res.status(400).json({ error: "Kategori dan Nominal wajib diisi" });
+  const id = parseId(req.params.id);
+  if (id === null) {
+    return res.status(400).json({ error: "ID kas tidak valid" });
+  }
+  const amount = Number(req.body.amount);
+  const { category, description } = req.body;
+
+  if (!Number.isInteger(amount) || amount <= 0 || typeof category !== "string" || !category.trim()) {
+    return res.status(400).json({ error: "Kategori dan Nominal (positif) wajib diisi" });
   }
 
   try {
-    await db.update(offerings).set({ amount, category, description }).where(eq(offerings.id, parseInt(id)));
+    const updated = await db
+      .update(offerings)
+      .set({ amount, category: category.trim(), description })
+      .where(eq(offerings.id, id))
+      .returning();
+    if (updated.length === 0) {
+      return res.status(404).json({ error: "Data kas tidak ditemukan" });
+    }
     res.json({ message: "Data kas berhasil diperbarui" });
   } catch (error) {
     res.status(500).json({ error: "Gagal memperbarui data kas" });
@@ -49,9 +66,15 @@ router.put("/:id", async (req, res) => {
 
 // DELETE /api/offerings/:id - Hapus kas umum
 router.delete("/:id", async (req, res) => {
-  const { id } = req.params;
+  const id = parseId(req.params.id);
+  if (id === null) {
+    return res.status(400).json({ error: "ID kas tidak valid" });
+  }
   try {
-    await db.delete(offerings).where(eq(offerings.id, parseInt(id)));
+    const deleted = await db.delete(offerings).where(eq(offerings.id, id)).returning();
+    if (deleted.length === 0) {
+      return res.status(404).json({ error: "Data kas tidak ditemukan" });
+    }
     res.json({ message: "Data kas berhasil dihapus" });
   } catch (error) {
     res.status(500).json({ error: "Gagal menghapus data kas" });

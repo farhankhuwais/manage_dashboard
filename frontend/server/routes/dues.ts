@@ -6,10 +6,18 @@ import { and, eq } from "drizzle-orm";
 const router = Router();
 
 router.post("/", async (req, res) => {
-  const { memberId, weekNumber, year, amount } = req.body;
+  const memberId = Number(req.body.memberId);
+  const weekNumber = Number(req.body.weekNumber);
+  const year = Number(req.body.year);
+  const amount = Number(req.body.amount);
 
-  if (!memberId || !weekNumber || !year || !amount) {
-    return res.status(400).json({ error: "Data tidak lengkap" });
+  if (
+    !Number.isInteger(memberId) || memberId <= 0 ||
+    !Number.isInteger(weekNumber) || weekNumber <= 0 ||
+    !Number.isInteger(year) || year <= 0 ||
+    !Number.isInteger(amount) || amount <= 0
+  ) {
+    return res.status(400).json({ error: "Data tidak lengkap atau tidak valid" });
   }
 
   try {
