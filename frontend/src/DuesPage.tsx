@@ -1,10 +1,10 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Receipt, Coins, CalendarDays, TrendingUp } from 'lucide-react';
+import { Receipt, Coins, CalendarDays, TrendingUp, Trash2 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface Due {
   id: number;
-  memberId: number;
+  memberId: number | null;
   weekNumber: number;
   year: number;
   amount: number;
@@ -133,6 +133,24 @@ export default function DuesPage({ token }: { token: string }) {
       console.error('Submit error', error);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('Apakah Anda yakin ingin menghapus catatan persembahan ini?')) return;
+    try {
+      const res = await fetch(`/api/dues/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        fetchData();
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Gagal menghapus persembahan');
+      }
+    } catch (error) {
+      console.error('Delete error', error);
     }
   };
 
@@ -281,12 +299,13 @@ export default function DuesPage({ token }: { token: string }) {
                       <th className="py-4 px-6 font-semibold text-slate-600 text-sm">Jemaat</th>
                       <th className="py-4 px-6 font-semibold text-slate-600 text-sm">Waktu</th>
                       <th className="py-4 px-6 font-semibold text-slate-600 text-sm text-right">Nominal</th>
+                      <th className="py-4 px-6 font-semibold text-slate-600 text-sm text-right">Aksi</th>
                     </tr>
                   </thead>
                   <tbody>
                     {dues.length === 0 ? (
                       <tr>
-                        <td colSpan={4} className="py-12 text-center text-slate-400">
+                        <td colSpan={5} className="py-12 text-center text-slate-400">
                           Belum ada catatan persembahan.
                         </td>
                       </tr>
@@ -300,6 +319,15 @@ export default function DuesPage({ token }: { token: string }) {
                             <td className="py-4 px-6 text-sm text-slate-600">Mg {d.weekNumber}, {d.year}</td>
                             <td className="py-4 px-6 font-semibold text-slate-800 text-right">
                               Rp {d.amount.toLocaleString('id-ID')}
+                            </td>
+                            <td className="py-4 px-6 text-right">
+                              <button
+                                onClick={() => handleDelete(d.id)}
+                                className="p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-600 rounded-lg transition-colors"
+                                title="Hapus"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
                             </td>
                           </tr>
                         );

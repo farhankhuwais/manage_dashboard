@@ -5,6 +5,11 @@ import { and, eq } from "drizzle-orm";
 
 const router = Router();
 
+const parseId = (raw: string): number | null => {
+  const id = Number(raw);
+  return Number.isInteger(id) && id > 0 ? id : null;
+};
+
 router.post("/", async (req, res) => {
   const rawMemberId = req.body.memberId;
   const memberId =
@@ -52,6 +57,23 @@ router.get("/", async (req, res) => {
     res.json(data);
   } catch (error) {
     res.status(500).json({ error: "Gagal mengambil data iuran" });
+  }
+});
+
+// DELETE /api/dues/:id - Hapus catatan iuran/persembahan
+router.delete("/:id", async (req, res) => {
+  const id = parseId(req.params.id);
+  if (id === null) {
+    return res.status(400).json({ error: "ID persembahan tidak valid" });
+  }
+  try {
+    const deleted = await db.delete(weeklyDues).where(eq(weeklyDues.id, id)).returning();
+    if (deleted.length === 0) {
+      return res.status(404).json({ error: "Data persembahan tidak ditemukan" });
+    }
+    res.json({ message: "Data persembahan berhasil dihapus" });
+  } catch (error) {
+    res.status(500).json({ error: "Gagal menghapus data persembahan" });
   }
 });
 
