@@ -54,7 +54,6 @@ const INFO_DATE_FIELDS: { key: keyof Member; label: string }[] = [
 ];
 
 const INFO_SELECT_FIELDS: { key: keyof Member; label: string; options: string[] }[] = [
-  { key: "statusPosisi", label: "Status Posisi", options: ["Jumlah Jemaat", "Kepala Keluarga", "Warga Gereja"] },
   { key: "statusWarga", label: "Status Warga", options: ["Warga Gereja", "Bukan Warga Gereja"] },
   { key: "statusKeluarga", label: "Status Keluarga", options: ["Kepala Keluarga"] },
   { key: "komisi", label: "Komisi", options: ["Anak", "Youth", "Pemuda", "Muda", "Dewasa", "Usin", "non"] },
@@ -88,7 +87,6 @@ const FORM_SECTIONS: { title: string; fields: FormField[] }[] = [
       { type: "select", key: "komisi", label: "Komisi", options: ["Anak", "Youth", "Pemuda", "Muda", "Dewasa", "Usin", "non"] },
       { type: "name" },
       { type: "status" },
-      { type: "select", key: "statusPosisi", label: "Status Posisi", options: ["Jumlah Jemaat", "Kepala Keluarga", "Warga Gereja"] },
     ],
   },
   {
@@ -305,13 +303,13 @@ function MembersPage({ token }: { token: string }) {
 
   const totalCount = members.length;
   const aktifCount = members.filter((m) => m.status === 'Aktif').length;
-  const pindahCount = members.filter((m) => m.status === 'Pindah').length;
+  const kepalaKeluargaCount = members.filter((m) => (m.statusKeluarga ?? '') === 'Kepala Keluarga').length;
   const simpatisanCount = members.filter((m) => (m.statusAnggota ?? 'Jemaat') === 'Simpatisan').length;
 
   const STAT_CARDS = [
     { label: 'Total Jemaat', value: totalCount, icon: Users, grad: 'from-blue-500 to-indigo-600' },
     { label: 'Aktif', value: aktifCount, icon: Heart, grad: 'from-emerald-500 to-teal-600' },
-    { label: 'Pindah', value: pindahCount, icon: Landmark, grad: 'from-amber-500 to-orange-600' },
+    { label: 'Jumlah Kepala Keluarga', value: kepalaKeluargaCount, icon: Home, grad: 'from-amber-500 to-orange-600' },
     { label: 'Simpatisan', value: simpatisanCount, icon: Users2, grad: 'from-violet-500 to-purple-600' },
   ];
 
