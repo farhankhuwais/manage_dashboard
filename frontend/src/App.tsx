@@ -194,7 +194,7 @@ const HEADER_LABEL_COLOR: Record<string, string> = (() => {
   return map;
 })();
 
-const STATUS_OPTIONS = ['Aktif', 'Tidak Aktif', 'Pindah', 'Meninggal'];
+const STATUS_OPTIONS = ['Aktif', 'Tidak Aktif', 'Pindah'];
 
 const statusBadgeClass = (status?: string) =>
   status === "Aktif"
