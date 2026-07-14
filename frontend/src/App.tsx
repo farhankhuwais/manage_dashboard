@@ -227,7 +227,7 @@ function MembersPage({ token }: { token: string }) {
   const [filterStatus, setFilterStatus] = useState('');
   const [filterAnggota, setFilterAnggota] = useState('');
   const [filterKomisi, setFilterKomisi] = useState('');
-  const [upsertMode, setUpsertMode] = useState(false);
+  const [upsertMode] = useState(false);
   const [importPreview, setImportPreview] = useState<{
     rows: { idx: number; cells: Record<string, string>; issues: string[] }[];
     validCount: number;
@@ -728,29 +728,20 @@ function MembersPage({ token }: { token: string }) {
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <button
+                onClick={downloadTemplate}
+                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate--50 transition-colors"
+                title="Unduh template Excel kosong"
+              >
+                <Download className="w-4 h-4" />
+                Template
+              </button>
+              <button
                 onClick={() => fileInputRef.current?.click()}
                 className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
                 title="Import dari Excel"
               >
                 <FileUp className="w-4 h-4" />
                 Import
-              </button>
-              <label className="flex items-center gap-1.5 px-2.5 py-2 text-xs font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors" title="Jika nama sudah ada, data lama diganti dengan yang baru">
-                <input
-                  type="checkbox"
-                  checked={upsertMode}
-                  onChange={(e) => setUpsertMode(e.target.checked)}
-                  className="w-3.5 h-3.5 accent-blue-600"
-                />
-                Upsert by Nama
-              </label>
-              <button
-                onClick={downloadTemplate}
-                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-                title="Unduh template Excel kosong"
-              >
-                <Download className="w-4 h-4" />
-                Template
               </button>
               <button
                 onClick={exportExcel}
