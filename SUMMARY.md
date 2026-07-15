@@ -34,6 +34,40 @@ Default branch: `main`. Semua perubahan di-commit & push ke `main`.
 - `c35e8ad` fix: status filter "Tidak Aktif" (typo "Non-Aktif")
 - `1fab05e` init: UI filter status (3 opsi) + Upsert di modal
 
+## Update: Fitur Dashboard "Beranda" (pusat informasi)
+
+Catatan stack aktual (koreksi): backend jalan dari `frontend/server/` (Express + Drizzle ORM + PostgreSQL via `pg`), bukan Hapi/MySQL. Deploy Vercel lewat `frontend/api/index.ts` yang re-export express app. `vercel.json` rewrite `/api/*` → `/api/index`.
+
+### Tabel DB baru (`frontend/server/db/schema.ts`)
+- `attendance` (service_date, session, headcount, note)
+- `service_schedules` (service_date, team_name, detail, person_count)
+- `events` (title, event_date, time, location, description)
+- `follow_ups` (title, description, category, people, status default 'Belum', due_date)
+
+Auto-migrasi idempoten: `ensureDashboardTables()` di `frontend/server/db/index.ts`, dipanggil cold-start di `server.ts`. Script manual: `node frontend/scripts/migrate-dashboard.mjs`.
+
+### Backend routes (mounted di `server.ts`, semua `authenticateToken`)
+- `/api/dashboard` (GET aggregate: kpi, trenKehadiran 6 minggu, demografi umur, rincianPersembahan, timBertugas, agenda, followUps)
+- `/api/attendance`, `/api/schedules`, `/api/events`, `/api/follow-ups` (CRUD penuh)
+
+### Frontend
+- Pages baru: `DashboardPage.tsx` (read-only overview), `AttendancePage.tsx`, `SchedulesPage.tsx`, `EventsPage.tsx`, `FollowUpsPage.tsx`.
+- `src/lib/format.ts` (formatRupiah/Short, formatDate/Short), `src/Dashboard.css` (palet liturgis gold/sage/wine, heading Fraunces).
+- `App.tsx`: tab default `dashboard` (Beranda). Nav: Beranda, Data Jemaat, Kehadiran Ibadah, Jadwal Pelayanan, Agenda Kegiatan, Tindak Lanjut, Persembahan, Buku Kas Umum, Manajemen Akses (admin).
+- Inline `OverviewPage` (breakdown per-field) DIHAPUS, diganti Beranda. Demografi ringkas ada di Beranda.
+- `index.html`: Google Fonts Fraunces + Inter.
+
+### Referensi desain
+`d:\belajar\tools\Hasil\dashboard_gereja.html` (prototipe HTML statis, sumber palet & layout).
+
+### Verifikasi
+- `cd frontend; npx tsc -b --noEmit` → exit 0.
+- Migrasi tabel dashboard sudah dijalankan ke DB (created/verified).
+
+### TODO belum dikerjakan / catatan
+- KPI card di DashboardPage punya prop `tab` tapi kartu belum clickable (navigasi hanya via tombol "Kelola" per-section).
+- SUMMARY.md bagian atas (Stack: Hapi/MySQL) masih deskripsi lama — abaikan, pakai catatan koreksi di atas.
+
 ## Cara Lanjut Sesi Baru
 Mulai chat di folder ini, bilang: "lanjutkan project dashboard, baca git log & SUMMARY.md".
-Gunakan Context7 bila perlu update library (react, xlsx, jspdf, hapi).
+Gunakan Context7 bila perlu update library (react, xlsx, jspdf, express, drizzle).

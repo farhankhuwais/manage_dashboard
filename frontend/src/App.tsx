@@ -1,9 +1,14 @@
-import { useEffect, useRef, useState } from 'react';
-import { Users, ReceiptText, LogOut, LayoutDashboard, Menu, X, Trash2, ShieldCheck, Landmark, Search, BarChart3, Church, Home, Users2, Briefcase, Heart, Droplets, GraduationCap, FileSpreadsheet, FileText, FileUp, Download } from 'lucide-react';
+﻿import { useEffect, useRef, useState } from 'react';
+import { Users, ReceiptText, LogOut, LayoutDashboard, Menu, X, Trash2, ShieldCheck, Landmark, Search, Home, Users2, Heart, CalendarCheck, CalendarDays, ClipboardList, FileSpreadsheet, FileText, FileUp, Download } from 'lucide-react';
 import DuesPage from './DuesPage';
 import LoginPage from './LoginPage';
 import UsersPage from './UsersPage';
 import OfferingsPage from './OfferingsPage';
+import DashboardPage from './DashboardPage';
+import AttendancePage from './AttendancePage';
+import SchedulesPage from './SchedulesPage';
+import EventsPage from './EventsPage';
+import FollowUpsPage from './FollowUpsPage';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -452,7 +457,7 @@ function MembersPage({ token }: { token: string }) {
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
         doc.setTextColor(100, 116, 139);
-        doc.text(`Diekspor: ${today}   •   ${filtered.length} data`, ml, 46);
+        doc.text(`Diekspor: ${today}   â€¢   ${filtered.length} data`, ml, 46);
         doc.setFontSize(8);
         doc.setTextColor(148, 163, 184);
         doc.text(`Halaman ${data.pageNumber}`, pw - mr, ph - 22, { align: 'right' });
@@ -505,7 +510,7 @@ function MembersPage({ token }: { token: string }) {
           else obj[key] = v;
         }
         const cells: Record<string, string> = { name, status, ...obj };
-        if (!name) issues.push("Nama kosong — baris dilewati");
+        if (!name) issues.push("Nama kosong â€” baris dilewati");
         for (const f of DATE_KEYS) {
           const v = obj[f];
           if (v && !isValidDate(v)) {
@@ -681,7 +686,7 @@ function MembersPage({ token }: { token: string }) {
                     <div key={f.key}>
                       <label className="block text-xs font-medium text-slate-500 mb-1">{f.label}</label>
                       <select value={info[f.key] ?? ""} onChange={(e) => setField(f.key, e.target.value)} className={inputCls}>
-                        <option value="">—</option>
+                        <option value="">â€”</option>
                         {f.options.map((o) => (
                           <option key={o} value={o}>{o}</option>
                         ))}
@@ -790,7 +795,7 @@ function MembersPage({ token }: { token: string }) {
                     onClick={() => setImportPreview(null)}
                     className="text-slate-400 hover:text-slate-700 text-xl leading-none"
                   >
-                    ✕
+                    âœ•
                   </button>
                 </div>
 
@@ -1007,144 +1012,9 @@ function MembersPage({ token }: { token: string }) {
   );
 }
 
-function OverviewPage({ token }: { token: string }) {
-  const [members, setMembers] = useState<Member[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchMembers = async () => {
-    try {
-      const res = await fetch('/api/members', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.status === 401 || res.status === 403) {
-        localStorage.removeItem('token');
-        window.location.reload();
-        return;
-      }
-      const data = await res.json();
-      if (res.ok && Array.isArray(data)) setMembers(data);
-      else setMembers([]);
-    } catch {
-      setMembers([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchMembers();
-  }, [token]);
-
-  const selOpts = (k: keyof Member) =>
-    INFO_SELECT_FIELDS.find((f) => f.key === k)?.options ?? [];
-
-  const OVERVIEW_FIELDS: { key: keyof Member; label: string; options: string[] }[] = [
-    { key: 'statusWarga', label: 'Status Warga', options: selOpts('statusWarga') },
-    { key: 'statusKeluarga', label: 'Status Keluarga', options: selOpts('statusKeluarga') },
-    { key: 'statusAnggota', label: 'Status Anggota', options: ['Jemaat', 'Simpatisan'] },
-    { key: 'komisi', label: 'Komisi', options: selOpts('komisi') },
-    { key: 'pekerjaan', label: 'Pekerjaan', options: selOpts('pekerjaan') },
-    { key: 'statusPernikahan', label: 'Status Pernikahan', options: selOpts('statusPernikahan') },
-    { key: 'golonganDarah', label: 'Golongan Darah', options: selOpts('golonganDarah') },
-    { key: 'pendidikanTerakhir', label: 'Pendidikan Terakhir', options: selOpts('pendidikanTerakhir') },
-  ];
-
-  const CARD_THEMES = [
-    { iconBg: 'bg-blue-50', icon: 'text-blue-600', pill: 'bg-blue-50 text-blue-600' },
-    { iconBg: 'bg-emerald-50', icon: 'text-emerald-600', pill: 'bg-emerald-50 text-emerald-600' },
-    { iconBg: 'bg-violet-50', icon: 'text-violet-600', pill: 'bg-violet-50 text-violet-600' },
-    { iconBg: 'bg-amber-50', icon: 'text-amber-600', pill: 'bg-amber-50 text-amber-600' },
-    { iconBg: 'bg-rose-50', icon: 'text-rose-600', pill: 'bg-rose-50 text-rose-600' },
-    { iconBg: 'bg-cyan-50', icon: 'text-cyan-600', pill: 'bg-cyan-50 text-cyan-600' },
-    { iconBg: 'bg-indigo-50', icon: 'text-indigo-600', pill: 'bg-indigo-50 text-indigo-600' },
-    { iconBg: 'bg-teal-50', icon: 'text-teal-600', pill: 'bg-teal-50 text-teal-600' },
-  ];
-
-  const FIELD_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-    statusWarga: Church,
-    statusKeluarga: Home,
-    statusAnggota: Users,
-    komisi: Users2,
-    pekerjaan: Briefcase,
-    statusPernikahan: Heart,
-    golonganDarah: Droplets,
-    pendidikanTerakhir: GraduationCap,
-  };
-
-  const countRows = (key: keyof Member, options: string[]) => {
-    const counts = new Map<string, number>(options.map((o) => [o, 0]));
-    let empty = 0;
-    for (const m of members) {
-      const v = (m as any)[key] as string | null | undefined;
-      if (v == null || v === '') empty++;
-      else counts.set(v, (counts.get(v) ?? 0) + 1);
-    }
-    const rows = options.map((o) => ({ label: o, count: counts.get(o) ?? 0 }));
-    if (empty > 0) rows.push({ label: 'Belum diisi', count: empty });
-    return rows;
-  };
-
-  return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-        <div className="col-span-full sm:col-span-1 bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-5 rounded-2xl shadow-lg">
-          <div className="flex items-center gap-2">
-            <Church className="w-5 h-5 text-blue-200" />
-            <p className="text-blue-100 text-sm">Total Jemaat Tercatat</p>
-          </div>
-          <p className="text-3xl font-extrabold mt-2">{members.length}</p>
-        </div>
-      </div>
-
-      {loading ? (
-        <div className="text-center py-20 text-slate-400">Memuat data...</div>
-      ) : members.length === 0 ? (
-        <div className="text-center py-20 text-slate-400">Belum ada data jemaat.</div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {OVERVIEW_FIELDS.map((f, i) => {
-            const t = CARD_THEMES[i % CARD_THEMES.length];
-            const Icon = FIELD_ICONS[String(f.key)] ?? Users;
-            const rows = countRows(f.key, f.options);
-            const total = rows.reduce((s, r) => s + r.count, 0);
-            return (
-              <div
-                key={String(f.key)}
-                className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
-              >
-                <div className="flex items-center gap-3 mb-5">
-                  <div className={`w-9 h-9 rounded-xl ${t.iconBg} flex items-center justify-center`}>
-                    <Icon className={`w-5 h-5 ${t.icon}`} />
-                  </div>
-                  <h3 className="flex-1 font-bold text-slate-800 leading-tight">{f.label}</h3>
-                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${t.pill}`}>{total}</span>
-                </div>
-                <div className="space-y-2">
-                  {rows.map((r) => (
-                    <div key={r.label} className="flex items-center justify-between text-sm">
-                      <span className="text-slate-600 truncate pr-2">{r.label}</span>
-                      <span
-                        className={`shrink-0 font-semibold rounded-full px-2.5 py-0.5 ${
-                          r.count === 0 ? 'bg-slate-50 text-slate-400' : t.pill
-                        }`}
-                      >
-                        {r.count}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
 function App() {
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
-  const [activeTab, setActiveTab] = useState<'members' | 'dues' | 'users' | 'offerings' | 'overview'>('members');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'members' | 'attendance' | 'schedules' | 'events' | 'followups' | 'dues' | 'users' | 'offerings'>('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Helper to get role from token
@@ -1213,6 +1083,18 @@ function App() {
 
         <nav className="flex-1 px-4 py-8 md:py-0 space-y-2 overflow-y-auto">
           <button
+            onClick={() => { setActiveTab('dashboard'); setIsMobileMenuOpen(false); }}
+            className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 ${
+              activeTab === 'dashboard'
+                ? 'bg-blue-600/10 text-blue-400 font-semibold'
+                : 'hover:bg-slate-800 hover:text-white'
+            }`}
+          >
+            <Home className={`w-5 h-5 ${activeTab === 'dashboard' ? 'text-blue-500' : ''}`} />
+            Beranda
+          </button>
+
+          <button
             onClick={() => { setActiveTab('members'); setIsMobileMenuOpen(false); }}
             className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 ${
               activeTab === 'members'
@@ -1225,15 +1107,51 @@ function App() {
           </button>
 
           <button
-            onClick={() => { setActiveTab('overview'); setIsMobileMenuOpen(false); }}
+            onClick={() => { setActiveTab('attendance'); setIsMobileMenuOpen(false); }}
             className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 ${
-              activeTab === 'overview'
+              activeTab === 'attendance'
                 ? 'bg-blue-600/10 text-blue-400 font-semibold'
                 : 'hover:bg-slate-800 hover:text-white'
             }`}
           >
-            <BarChart3 className={`w-5 h-5 ${activeTab === 'overview' ? 'text-blue-500' : ''}`} />
-            Overview
+            <CalendarCheck className={`w-5 h-5 ${activeTab === 'attendance' ? 'text-blue-500' : ''}`} />
+            Kehadiran Ibadah
+          </button>
+
+          <button
+            onClick={() => { setActiveTab('schedules'); setIsMobileMenuOpen(false); }}
+            className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 ${
+              activeTab === 'schedules'
+                ? 'bg-blue-600/10 text-blue-400 font-semibold'
+                : 'hover:bg-slate-800 hover:text-white'
+            }`}
+          >
+            <Users2 className={`w-5 h-5 ${activeTab === 'schedules' ? 'text-blue-500' : ''}`} />
+            Jadwal Pelayanan
+          </button>
+
+          <button
+            onClick={() => { setActiveTab('events'); setIsMobileMenuOpen(false); }}
+            className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 ${
+              activeTab === 'events'
+                ? 'bg-blue-600/10 text-blue-400 font-semibold'
+                : 'hover:bg-slate-800 hover:text-white'
+            }`}
+          >
+            <CalendarDays className={`w-5 h-5 ${activeTab === 'events' ? 'text-blue-500' : ''}`} />
+            Agenda Kegiatan
+          </button>
+
+          <button
+            onClick={() => { setActiveTab('followups'); setIsMobileMenuOpen(false); }}
+            className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 ${
+              activeTab === 'followups'
+                ? 'bg-blue-600/10 text-blue-400 font-semibold'
+                : 'hover:bg-slate-800 hover:text-white'
+            }`}
+          >
+            <ClipboardList className={`w-5 h-5 ${activeTab === 'followups' ? 'text-blue-500' : ''}`} />
+            Tindak Lanjut
           </button>
 
           <button
@@ -1290,22 +1208,31 @@ function App() {
       <main className="flex-1 overflow-y-auto h-screen relative">
         <div className="max-w-6xl mx-auto p-4 md:p-8 lg:p-12">
           
-          <header className="mb-10 hidden md:block">
-            <h2 className="text-3xl font-bold text-slate-900 tracking-tight">
-              {activeTab === 'members' && 'Manajemen Jemaat'}
-              {activeTab === 'overview' && 'Overview Jemaat'}
-              {activeTab === 'dues' && 'Pencatatan Persembahan'}
-              {activeTab === 'offerings' && 'Buku Kas Umum'}
-              {activeTab === 'users' && 'Manajemen Akses Admin'}
-            </h2>
-            <p className="text-slate-500 mt-1">
-              {activeTab === 'users' ? 'Kelola akun pengurus sistem ini.' : 'Kelola data gereja dengan cepat dan aman.'}
-            </p>
-          </header>
+          {activeTab !== 'dashboard' && (
+            <header className="mb-10 hidden md:block">
+              <h2 className="text-3xl font-bold text-slate-900 tracking-tight">
+                {activeTab === 'members' && 'Manajemen Jemaat'}
+                {activeTab === 'attendance' && 'Kehadiran Ibadah'}
+                {activeTab === 'schedules' && 'Jadwal Pelayanan'}
+                {activeTab === 'events' && 'Agenda Kegiatan'}
+                {activeTab === 'followups' && 'Perlu Tindak Lanjut'}
+                {activeTab === 'dues' && 'Pencatatan Persembahan'}
+                {activeTab === 'offerings' && 'Buku Kas Umum'}
+                {activeTab === 'users' && 'Manajemen Akses Admin'}
+              </h2>
+              <p className="text-slate-500 mt-1">
+                {activeTab === 'users' ? 'Kelola akun pengurus sistem ini.' : 'Kelola data gereja dengan cepat dan aman.'}
+              </p>
+            </header>
+          )}
 
           <div className="relative">
+            {activeTab === 'dashboard' && <DashboardPage token={token} onNavigate={(t) => setActiveTab(t as typeof activeTab)} />}
             {activeTab === 'members' && <MembersPage token={token} />}
-            {activeTab === 'overview' && <OverviewPage token={token} />}
+            {activeTab === 'attendance' && <AttendancePage token={token} />}
+            {activeTab === 'schedules' && <SchedulesPage token={token} />}
+            {activeTab === 'events' && <EventsPage token={token} />}
+            {activeTab === 'followups' && <FollowUpsPage token={token} />}
             {activeTab === 'dues' && <DuesPage token={token} />}
             {activeTab === 'offerings' && <OfferingsPage token={token} />}
             {activeTab === 'users' && userRole === 'admin' && <UsersPage token={token} />}

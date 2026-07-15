@@ -55,3 +55,38 @@ export const weeklyDues = pgTable("weekly_dues", {
   amount: integer("amount").notNull(),
   date: timestamp("date").notNull().defaultNow()
 });
+
+export const attendance = pgTable("attendance", {
+  id: serial("id").primaryKey(),
+  serviceDate: date("service_date").notNull(),
+  session: text("session").notNull(),
+  headcount: integer("headcount").notNull(),
+  note: text("note")
+});
+
+export const serviceSchedules = pgTable("service_schedules", {
+  id: serial("id").primaryKey(),
+  serviceDate: date("service_date").notNull(),
+  teamName: text("team_name").notNull(),
+  detail: text("detail"),
+  personCount: integer("person_count").notNull().default(0)
+});
+
+export const events = pgTable("events", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  eventDate: date("event_date").notNull(),
+  time: text("time"),
+  location: text("location"),
+  description: text("description")
+});
+
+export const followUps = pgTable("follow_ups", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  category: text("category"),
+  people: text("people"),
+  status: text("status").notNull().default("Belum"),
+  dueDate: date("due_date")
+});

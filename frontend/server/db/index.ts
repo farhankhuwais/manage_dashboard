@@ -58,3 +58,53 @@ export function ensureMembersColumns(): Promise<void> {
   }
   return ensureMembersColumnsPromise;
 }
+
+// Auto-migrasi tabel dashboard (attendance, service_schedules, events,
+// follow_ups) — idempoten, dijalankan di cold-start Vercel.
+const DASHBOARD_TABLES_SQL = `
+  CREATE TABLE IF NOT EXISTS "attendance" (
+    "id" serial PRIMARY KEY NOT NULL,
+    "service_date" date NOT NULL,
+    "session" text NOT NULL,
+    "headcount" integer NOT NULL,
+    "note" text
+  );
+  CREATE TABLE IF NOT EXISTS "service_schedules" (
+    "id" serial PRIMARY KEY NOT NULL,
+    "service_date" date NOT NULL,
+    "team_name" text NOT NULL,
+    "detail" text,
+    "person_count" integer NOT NULL DEFAULT 0
+  );
+  CREATE TABLE IF NOT EXISTS "events" (
+    "id" serial PRIMARY KEY NOT NULL,
+    "title" text NOT NULL,
+    "event_date" date NOT NULL,
+    "time" text,
+    "location" text,
+    "description" text
+  );
+  CREATE TABLE IF NOT EXISTS "follow_ups" (
+    "id" serial PRIMARY KEY NOT NULL,
+    "title" text NOT NULL,
+    "description" text,
+    "category" text,
+    "people" text,
+    "status" text NOT NULL DEFAULT 'Belum',
+    "due_date" date
+  );
+`;
+
+let ensureDashboardTablesPromise: Promise<void> | null = null;
+export function ensureDashboardTables(): Promise<void> {
+  if (!ensureDashboardTablesPromise) {
+    ensureDashboardTablesPromise = pool
+      .query(DASHBOARD_TABLES_SQL)
+      .then(() => undefined)
+      .catch((err) => {
+        ensureDashboardTablesPromise = null;
+        throw err;
+      });
+  }
+  return ensureDashboardTablesPromise;
+}

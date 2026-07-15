@@ -5,8 +5,13 @@ import membersRoutes from "./routes/members.js";
 import duesRoutes from "./routes/dues.js";
 import usersRoutes from "./routes/users.js";
 import offeringsRoutes from "./routes/offerings.js";
+import dashboardRoutes from "./routes/dashboard.js";
+import attendanceRoutes from "./routes/attendance.js";
+import schedulesRoutes from "./routes/schedules.js";
+import eventsRoutes from "./routes/events.js";
+import followUpsRoutes from "./routes/followUps.js";
 import { authenticateToken } from "./middleware/authMiddleware.js";
-import { ensureMembersColumns } from "./db/index.js";
+import { ensureMembersColumns, ensureDashboardTables } from "./db/index.js";
 
 const app = express();
 
@@ -14,6 +19,9 @@ const app = express();
 // Idempoten; aman dijalankan di setiap cold-start Vercel.
 ensureMembersColumns().catch((err) =>
   console.error("ensureMembersColumns gagal:", err?.message)
+);
+ensureDashboardTables().catch((err) =>
+  console.error("ensureDashboardTables gagal:", err?.message)
 );
 
 // Vercel serverless sering mem-buffer body request ke req.body (Buffer/String)
@@ -104,6 +112,11 @@ app.use("/api/members", authenticateToken, membersRoutes);
 app.use("/api/dues", authenticateToken, duesRoutes);
 app.use("/api/users", authenticateToken, usersRoutes);
 app.use("/api/offerings", authenticateToken, offeringsRoutes);
+app.use("/api/dashboard", authenticateToken, dashboardRoutes);
+app.use("/api/attendance", authenticateToken, attendanceRoutes);
+app.use("/api/schedules", authenticateToken, schedulesRoutes);
+app.use("/api/events", authenticateToken, eventsRoutes);
+app.use("/api/follow-ups", authenticateToken, followUpsRoutes);
 
 const PORT = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'production') {
