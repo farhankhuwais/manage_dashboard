@@ -561,8 +561,37 @@ function MembersPage({ token }: { token: string }) {
 
   const downloadTemplate = () => {
     const header = ['No', ...TABLE_COLUMNS.map((c) => c.label)];
-    const emptyRows = Array.from({ length: 10 }, () => header.map(() => ''));
-    const ws = XLSX.utils.aoa_to_sheet([header, ...emptyRows]);
+    const dateCols = new Set<number>();
+    header.forEach((label, idx) => {
+      const key = LABEL_TO_KEY[label];
+      if (key && DATE_KEYS.includes(key)) dateCols.add(idx);
+    });
+
+    const ROWS = 10;
+    const example = new Date();
+    const body = Array.from({ length: ROWS }, (_, r) =>
+      header.map((_, c) => (r === 0 && dateCols.has(c) ? example : '')),
+    );
+    const ws = XLSX.utils.aoa_to_sheet([header, ...body], { cellDates: true });
+
+    // Format sel contoh tanggal (baris pertama) sebagai tanggal dd/mm/yyyy.
+    // Sel kosong dibiarkan kosong agar tidak muncul 01/01/1970.
+    for (const c of dateCols) {
+      const addr = XLSX.utils.encode_cell({ r: 1, c });
+      const cell = ws[addr];
+      if (cell && cell.v instanceof Date) {
+        cell.t = 'd';
+        cell.z = 'dd/mm/yyyy';
+      }
+    }
+
+    // Lebar kolom biar rapi
+    ws['!cols'] = header.map((label) => {
+      const key = LABEL_TO_KEY[label];
+      if (key && DATE_KEYS.includes(key)) return { wch: 14 };
+      return { wch: Math.min(Math.max(label.length + 2, 8), 32) };
+    });
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Template');
     XLSX.writeFile(wb, 'Template-Import-Jemaat.xlsx');
