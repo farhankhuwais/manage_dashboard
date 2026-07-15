@@ -102,6 +102,11 @@ export default function CalendarPage({ token, onNavigate }: { token: string; onN
     setSelected(todayKey);
   };
 
+  const monthPrefix = `${year}-${pad(month + 1)}`;
+  let monthHadir = 0, monthSesi = 0, monthAgenda = 0;
+  attByDate.forEach((v, k) => { if (k.startsWith(monthPrefix)) { monthHadir += v.total; monthSesi += v.sessions.length; } });
+  eventsByDate.forEach((v, k) => { if (k.startsWith(monthPrefix)) monthAgenda += v.length; });
+
   const selAtt = selected ? attByDate.get(selected) : undefined;
   const selEvents = selected ? eventsByDate.get(selected) ?? [] : [];
   const selDateLabel = selected
@@ -120,59 +125,73 @@ export default function CalendarPage({ token, onNavigate }: { token: string; onN
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 border-t-4 border-t-blue-500 p-4 md:p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 border-t-4 border-t-blue-500 p-4 md:p-5 max-w-4xl">
         {/* Toolbar */}
-        <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-          <h2 className="text-lg font-bold text-slate-800">{MONTHS[month]} {year}</h2>
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-3">
+          <h2 className="text-base font-bold text-slate-800">{MONTHS[month]} {year}</h2>
           <div className="flex items-center gap-2">
-            <button onClick={goToday} className="px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors">Hari ini</button>
-            <button onClick={prevMonth} className="p-2 text-slate-500 bg-white border border-slate-200 rounded-lg hover:bg-slate-50" aria-label="Bulan sebelumnya"><ChevronLeft className="w-4 h-4" /></button>
-            <button onClick={nextMonth} className="p-2 text-slate-500 bg-white border border-slate-200 rounded-lg hover:bg-slate-50" aria-label="Bulan berikutnya"><ChevronRight className="w-4 h-4" /></button>
+            <button onClick={goToday} className="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors">Hari ini</button>
+            <button onClick={prevMonth} className="p-1.5 text-slate-500 bg-white border border-slate-200 rounded-lg hover:bg-slate-50" aria-label="Bulan sebelumnya"><ChevronLeft className="w-4 h-4" /></button>
+            <button onClick={nextMonth} className="p-1.5 text-slate-500 bg-white border border-slate-200 rounded-lg hover:bg-slate-50" aria-label="Bulan berikutnya"><ChevronRight className="w-4 h-4" /></button>
           </div>
         </div>
 
-        {/* Legend */}
-        <div className="flex items-center gap-4 mb-3 text-xs text-slate-500">
-          <span className="inline-flex items-center gap-1.5"><span className="inline-block w-2.5 h-2.5 rounded-full bg-blue-500" /> Kehadiran</span>
-          <span className="inline-flex items-center gap-1.5"><span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500" /> Agenda</span>
+        {/* Ringkasan bulan */}
+        <div className="grid grid-cols-3 gap-2 mb-4">
+          <div className="rounded-lg bg-blue-50 border border-blue-100 px-3 py-2">
+            <p className="text-[10px] uppercase tracking-wide text-blue-500">Total Hadir</p>
+            <p className="text-base font-extrabold text-blue-700 leading-tight">{monthHadir}</p>
+          </div>
+          <div className="rounded-lg bg-indigo-50 border border-indigo-100 px-3 py-2">
+            <p className="text-[10px] uppercase tracking-wide text-indigo-500">Sesi Ibadah</p>
+            <p className="text-base font-extrabold text-indigo-700 leading-tight">{monthSesi}</p>
+          </div>
+          <div className="rounded-lg bg-emerald-50 border border-emerald-100 px-3 py-2">
+            <p className="text-[10px] uppercase tracking-wide text-emerald-500">Agenda</p>
+            <p className="text-base font-extrabold text-emerald-700 leading-tight">{monthAgenda}</p>
+          </div>
         </div>
 
         {loading ? (
           <div className="py-20 text-center text-slate-400">Memuat...</div>
         ) : (
           <>
-            <div className="grid grid-cols-7 gap-1 md:gap-2">
-              {WEEKDAYS.map((w) => (
-                <div key={w} className="text-center text-xs font-semibold text-slate-400 py-2">{w}</div>
+            <div className="grid grid-cols-7 gap-1">
+              {WEEKDAYS.map((w, i) => (
+                <div key={w} className={`text-center text-[11px] font-semibold py-1.5 ${i === 0 ? "text-rose-400" : "text-slate-400"}`}>{w}</div>
               ))}
               {cells.map((d, i) => {
-                if (d === null) return <div key={`e${i}`} className="aspect-square" />;
+                if (d === null) return <div key={`e${i}`} className="h-16 md:h-20" />;
                 const k = keyOf(year, month, d);
                 const att = attByDate.get(k);
                 const evs = eventsByDate.get(k);
                 const isToday = k === todayKey;
                 const isSelected = k === selected;
+                const isSunday = i % 7 === 0;
                 return (
                   <button
                     key={k}
                     onClick={() => setSelected(isSelected ? null : k)}
-                    className={`aspect-square rounded-lg border p-1 md:p-1.5 flex flex-col items-center transition-colors text-left ${
+                    className={`h-16 md:h-20 rounded-lg border p-1.5 flex flex-col text-left overflow-hidden transition-colors ${
                       isSelected
                         ? "border-blue-400 bg-blue-50 ring-1 ring-blue-300"
                         : isToday
-                        ? "border-blue-200 bg-blue-50/40"
+                        ? "border-blue-300 bg-blue-50/50"
                         : "border-slate-100 hover:bg-slate-50"
                     }`}
                   >
-                    <span className={`text-xs md:text-sm ${isToday ? "font-bold text-blue-700" : "text-slate-600"}`}>{d}</span>
-                    <div className="flex-1 flex flex-col items-center justify-center gap-1 w-full">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className={`text-xs leading-none ${isToday ? "font-bold text-white bg-blue-600 rounded-full w-5 h-5 flex items-center justify-center" : isSunday ? "text-rose-500 font-medium" : "text-slate-600"}`}>{d}</span>
                       {att && (
-                        <span className="text-[10px] md:text-xs font-semibold text-blue-700 bg-blue-100 rounded px-1 leading-tight">
-                          {att.total}
-                        </span>
+                        <span className="text-[10px] font-bold text-blue-700 bg-blue-100 rounded px-1 leading-tight shrink-0">{att.total}</span>
                       )}
-                      {evs && evs.length > 0 && (
-                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" title={`${evs.length} agenda`} />
+                    </div>
+                    <div className="mt-1 space-y-0.5 overflow-hidden">
+                      {(evs ?? []).slice(0, 2).map((e) => (
+                        <p key={e.id} className="text-[9px] md:text-[10px] leading-tight text-emerald-700 bg-emerald-50 rounded px-1 truncate">{e.title}</p>
+                      ))}
+                      {evs && evs.length > 2 && (
+                        <p className="text-[9px] text-slate-400 leading-tight px-1">+{evs.length - 2} lagi</p>
                       )}
                     </div>
                   </button>
