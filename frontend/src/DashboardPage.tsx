@@ -26,6 +26,13 @@ const KPI_CARDS = [
 const MONTHS = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
 const RINCIAN_BAR_MAX = 100_000_000; // skala bar tetap: 100jt
+const DEMO_RANGE: Record<string, string> = {
+  Anak: "Anak (0–12)",
+  Remaja: "Remaja (13–17)",
+  Pemuda: "Pemuda (18–30)",
+  Dewasa: "Dewasa (31–55)",
+  Lansia: "Lansia (56+)",
+};
 const eventDay = (iso: string) => Number(String(iso).slice(8, 10)) || "";
 const eventMonth = (iso: string) => MONTHS_SHORT[Number(String(iso).slice(5, 7)) - 1] ?? "";
 
@@ -87,7 +94,6 @@ export default function DashboardPage({ token, onNavigate }: { token: string; on
     </div>
   );
 
-  const maxDemo = Math.max(1, ...(data?.demografi.map((d) => d.value) ?? [1]));
   const totalDemo = (data?.demografi.reduce((s, d) => s + d.value, 0) || 0);
 
   return (
@@ -149,22 +155,28 @@ export default function DashboardPage({ token, onNavigate }: { token: string; on
             </div>
 
             <div className="dash-card dash-card-indigo p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                  <Users className="w-5 h-5 text-indigo-600" /> Demografi Jemaat
-                </h3>
-                <span className="text-xs text-slate-400">{totalDemo} tercatat</span>
+              <div className="mb-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                    <Users className="w-5 h-5 text-indigo-600" /> Demografi Jemaat
+                  </h3>
+                  <span className="text-xs text-slate-400">{totalDemo} tercatat</span>
+                </div>
+                <p className="text-xs text-slate-400 mt-0.5">Berdasarkan kelompok usia</p>
               </div>
               <div className="space-y-3">
-                {(data?.demografi ?? []).map((d) => (
-                  <div key={d.label} className="flex items-center gap-3">
-                    <span className="w-20 text-sm text-slate-600 shrink-0">{d.label}</span>
-                    <div className="flex-1 dash-bar-track h-2.5">
-                      <div className="dash-bar-fill-sage h-2.5" style={{ width: `${(d.value / maxDemo) * 100}%` }} />
+                {(data?.demografi ?? []).map((d) => {
+                  const pct = totalDemo > 0 ? Math.round((d.value / totalDemo) * 100) : 0;
+                  return (
+                    <div key={d.label} className="flex items-center gap-3">
+                      <span className="w-28 text-sm text-slate-600 shrink-0">{DEMO_RANGE[d.label] ?? d.label}</span>
+                      <div className="flex-1 dash-bar-track h-2.5">
+                        <div className="dash-bar-fill-sage h-2.5" style={{ width: `${pct}%` }} />
+                      </div>
+                      <span className="w-10 text-right text-sm font-semibold text-slate-800">{pct}%</span>
                     </div>
-                    <span className="w-8 text-right text-sm font-semibold text-slate-800">{d.value}</span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </section>
