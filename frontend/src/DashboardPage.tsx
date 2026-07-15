@@ -128,16 +128,22 @@ export default function DashboardPage({ token, onNavigate }: { token: string; on
           <SectionTitle>Kehadiran &amp; Keanggotaan</SectionTitle>
           <section className="grid grid-cols-1 lg:grid-cols-[1.55fr_1fr] gap-6 items-start">
             <div className="dash-card dash-card-blue p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-blue-600" /> Tren Kehadiran
-                </h3>
-                <ManageBtn tab="attendance" label="Kelola" />
+              <div className="mb-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-blue-600" /> Tren Kehadiran Ibadah — 6 Minggu Terakhir
+                  </h3>
+                  <ManageBtn tab="attendance" label="Kelola" />
+                </div>
+                <p className="text-xs text-slate-400 mt-0.5">Gabungan seluruh sesi ibadah per minggu</p>
               </div>
               <TrendChart data={data?.trenKehadiran ?? []} />
-              <div className="flex justify-between text-[11px] text-slate-400 mt-1">
+              <div className="grid gap-1 text-center" style={{ gridTemplateColumns: `repeat(${data?.trenKehadiran.length || 6}, 1fr)` }}>
                 {(data?.trenKehadiran ?? []).map((d) => (
-                  <span key={d.label}>{formatDateShort(d.label)}</span>
+                  <div key={d.label} className="min-w-0">
+                    <p className="text-xs font-semibold text-slate-700">{d.value}</p>
+                    <p className="text-[10px] text-slate-400">{formatDateShort(d.label)}</p>
+                  </div>
                 ))}
               </div>
             </div>
