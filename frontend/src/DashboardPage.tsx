@@ -8,6 +8,7 @@ import "./Dashboard.css";
 
 interface DashboardData {
   kpi: { jemaatAktif: number; kehadiranMingguIni: number; persembahanBulanIni: number; pelayanBertugas: number };
+  kpiSub?: { jemaatAktif: string; kehadiranMingguIni: string; persembahanBulanIni: string; pelayanBertugas: string };
   trenKehadiran: { label: string; value: number }[];
   demografi: { label: string; value: number }[];
   rincianPersembahan: { category: string; total: number }[];
@@ -112,14 +113,16 @@ export default function DashboardPage({ token, onNavigate }: { token: string; on
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {KPI_CARDS.map((c) => {
           const v = data?.kpi[c.key as keyof DashboardData["kpi"]] ?? 0;
+          const sub = data?.kpiSub?.[c.key as keyof NonNullable<DashboardData["kpiSub"]>];
           return (
-            <div key={c.key} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 flex items-center gap-3 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+            <div key={c.key} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 flex items-start gap-3 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
               <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${c.grad} flex items-center justify-center shrink-0`}>
                 <c.icon className="w-5 h-5 text-white" />
               </div>
               <div className="min-w-0">
                 <p className="text-xs text-slate-500 truncate">{c.label}</p>
                 <p className="text-xl font-extrabold text-slate-800">{c.money ? formatRupiahShort(v) : v}</p>
+                {sub && <p className="text-[11px] text-slate-400 mt-0.5 leading-tight">{sub}</p>}
               </div>
             </div>
           );

@@ -22,11 +22,13 @@ router.get("/", async (req, res) => {
     const year = now.getUTCFullYear();
     const todayStr = now.toISOString().slice(0, 10);
 
-    // KPI: jemaat aktif
+    // KPI: jemaat aktif + total jemaat
     const [aktifRow] = await db
       .select({ count: sql`count(*)` })
       .from(members)
       .where(eq(members.status, "Aktif"));
+    const [totalRow] = await db.select({ count: sql`count(*)` }).from(members);
+    const totalJemaat = num(totalRow?.count);
 
     // Persembahan bulan ini + rincian per kategori
     const whereMonth = sql`extract(year from ${offerings.date}) = ${year} AND extract(month from ${offerings.date}) = ${month}`;
@@ -34,6 +36,15 @@ router.get("/", async (req, res) => {
       .select({ total: sql`coalesce(sum(${offerings.amount}),0)` })
       .from(offerings)
       .where(whereMonth);
+
+    // Persembahan bulan lalu (untuk delta)
+    const pm = month === 1 ? 12 : month - 1;
+    const pmy = month === 1 ? year - 1 : year;
+    const wherePrevMonth = sql`extract(year from ${offerings.date}) = ${pmy} AND extract(month from ${offerings.date}) = ${pm}`;
+    const [prevPersRow] = await db
+      .select({ total: sql`coalesce(sum(${offerings.amount}),0)` })
+      .from(offerings)
+      .where(wherePrevMonth);
     const rincian = await db
       .select({ category: offerings.category, total: sql`coalesce(sum(${offerings.amount}),0)` })
       .from(offerings)
@@ -102,6 +113,24 @@ router.get("/", async (req, res) => {
       if (idx >= 0) demografi[idx].value++;
     }
 
+    // Info tambahan KPI
+    const persNow = num(persembahanRow?.total);
+    const prevPers = num(prevPersRow?.total);
+    const kehLast = trenKehadiran[trenKehadiran.length - 1]?.value ?? 0;
+    const kehPrev = trenKehadiran[trenKehadiran.length - 2]?.value ?? 0;
+    const pctDelta = (cur: number, prev: number) =>
+      prev > 0 ? Math.round(((cur - prev) / prev) * 100) : cur > 0 ? 100 : 0;
+    const fmtPct = (p: number) => (p >= 0 ? `+${p}` : `${p}`) + "%";
+
+    const kpiSub = {
+      jemaatAktif: `dari ${totalJemaat} total jemaat`,
+      kehadiranMingguIni:
+        kehLast > 0 || kehPrev > 0 ? `${fmtPct(pctDelta(kehLast, kehPrev))} dari minggu lalu` : "belum ada data",
+      persembahanBulanIni:
+        persNow > 0 || prevPers > 0 ? `${fmtPct(pctDelta(persNow, prevPers))} dari bulan lalu` : "belum ada data",
+      pelayanBertugas: `${timBertugas.length} tim pelayanan minggu ini`,
+    };
+
     res.json({
       kpi: {
         jemaatAktif: num(aktifRow?.count),
@@ -109,6 +138,7 @@ router.get("/", async (req, res) => {
         persembahanBulanIni: num(persembahanRow?.total),
         pelayanBertugas,
       },
+      kpiSub,
       trenKehadiran,
       demografi,
       rincianPersembahan: rincian.map((r) => ({ category: r.category, total: num(r.total) })),
