@@ -1,17 +1,18 @@
-/* ===== Dashboard "pusat informasi" — palet liturgis (gold / sage / wine) ===== */
-.dash-paper { background: #FAF6EE; font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; }
-.dash-ink { color: #1C2541; }
-.dash-paper h1, .dash-paper h2 { font-family: 'Fraunces', Georgia, serif; letter-spacing: -0.01em; }
+/* ===== Dashboard "Beranda" — selaras tema app (blue / indigo / slate) ===== */
+.dash-ink { color: #1e293b; }
+.dash-muted { color: #94a3b8; }
+
 .dash-card {
-  background: #FFFFFF;
-  border: 1px solid #E4DCC8;
+  background: #ffffff;
+  border: 1px solid #f1f5f9;
   border-radius: 1rem;
-  box-shadow: 0 1px 2px rgba(28, 37, 65, 0.04);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
-.dash-card-gold { border-top: 4px solid #B8892F; }
-.dash-card-sage { border-top: 4px solid #5F7A61; }
-.dash-card-wine { border-top: 4px solid #9C4A4F; }
-.dash-card-ink  { border-top: 4px solid #1C2541; }
+.dash-card-blue    { border-top: 4px solid #3b82f6; }
+.dash-card-indigo  { border-top: 4px solid #6366f1; }
+.dash-card-amber   { border-top: 4px solid #f59e0b; }
+.dash-card-violet  { border-top: 4px solid #8b5cf6; }
+.dash-card-emerald { border-top: 4px solid #10b981; }
 
 .dash-kpi-icon {
   width: 2.75rem; height: 2.75rem;
@@ -19,28 +20,30 @@
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
-.dash-muted { color: #8A8672; }
-.dash-line { stroke: #B8892F; stroke-width: 2.5; fill: none; }
-.dash-dot { fill: #B8892F; }
-.dash-grid { stroke: #E4DCC8; stroke-width: 1; }
 
-.dash-bar-track { background: #F0E4C8; border-radius: 9999px; overflow: hidden; }
-.dash-bar-fill { background: linear-gradient(90deg, #B8892F, #9C4A4F); height: 100%; border-radius: 9999px; }
-.dash-bar-fill-sage { background: linear-gradient(90deg, #5F7A61, #1C2541); }
+/* chart */
+.dash-line { stroke: #2563eb; stroke-width: 2.5; fill: none; }
+.dash-dot { fill: #4f46e5; }
+.dash-grid { stroke: #e2e8f0; stroke-width: 1; }
+
+/* bars */
+.dash-bar-track { background: #eef2ff; border-radius: 9999px; overflow: hidden; }
+.dash-bar-fill { background: linear-gradient(90deg, #3b82f6, #6366f1); height: 100%; border-radius: 9999px; }
+.dash-bar-fill-sage { background: linear-gradient(90deg, #6366f1, #8b5cf6); }
 
 .dash-link {
   display: inline-flex; align-items: center; gap: 0.35rem;
   font-size: 0.8rem; font-weight: 600;
-  color: #B8892F;
+  color: #2563eb;
   transition: color .15s ease;
 }
-.dash-link:hover { color: #9C4A4F; }
+.dash-link:hover { color: #4f46e5; }
 
 .dash-badge {
   display: inline-flex; align-items: center;
   padding: 0.15rem 0.6rem; border-radius: 9999px;
   font-size: 0.7rem; font-weight: 600; border: 1px solid transparent;
 }
-.dash-badge-belum   { background: #F0E4C8; color: #8A6A1F; border-color: #E4DCC8; }
-.dash-badge-proses  { background: #E6EFE9; color: #3F5C49; border-color: #D2E0D6; }
-.dash-badge-selesai { background: #EAEAEA; color: #555; border-color: #DDD; }
+.dash-badge-belum   { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+.dash-badge-proses  { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+.dash-badge-selesai { background: #f1f5f9; color: #475569; border-color: #e2e8f0; }
