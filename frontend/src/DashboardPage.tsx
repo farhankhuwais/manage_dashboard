@@ -79,6 +79,13 @@ export default function DashboardPage({ token, onNavigate }: { token: string; on
     </button>
   );
 
+  const SectionTitle = ({ children }: { children: React.ReactNode }) => (
+    <div className="flex items-center gap-3 mt-10 mb-4 first:mt-0">
+      <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 whitespace-nowrap">{children}</h2>
+      <span className="flex-1 h-px bg-slate-200" />
+    </div>
+  );
+
   const maxRincian = Math.max(1, ...(data?.rincianPersembahan.map((r) => r.total) ?? [1]));
   const maxDemo = Math.max(1, ...(data?.demografi.map((d) => d.value) ?? [1]));
   const totalDemo = (data?.demografi.reduce((s, d) => s + d.value, 0) || 0);
@@ -116,14 +123,15 @@ export default function DashboardPage({ token, onNavigate }: { token: string; on
       {loading ? (
         <div className="py-20 text-center text-slate-400">Memuat data...</div>
       ) : (
-        <div className="space-y-6">
-          {/* Kehadiran & Keanggotaan */}
-          <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div>
+          {/* ===== Kehadiran & Keanggotaan ===== */}
+          <SectionTitle>Kehadiran &amp; Keanggotaan</SectionTitle>
+          <section className="grid grid-cols-1 lg:grid-cols-[1.55fr_1fr] gap-6 items-start">
             <div className="dash-card dash-card-blue p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                <h3 className="font-bold text-slate-800 flex items-center gap-2">
                   <TrendingUp className="w-5 h-5 text-blue-600" /> Tren Kehadiran
-                </h2>
+                </h3>
                 <ManageBtn tab="attendance" label="Kelola" />
               </div>
               <TrendChart data={data?.trenKehadiran ?? []} />
@@ -136,9 +144,9 @@ export default function DashboardPage({ token, onNavigate }: { token: string; on
 
             <div className="dash-card dash-card-indigo p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                <h3 className="font-bold text-slate-800 flex items-center gap-2">
                   <Users className="w-5 h-5 text-indigo-600" /> Demografi Jemaat
-                </h2>
+                </h3>
                 <span className="text-xs text-slate-400">{totalDemo} tercatat</span>
               </div>
               <div className="space-y-3">
@@ -155,38 +163,64 @@ export default function DashboardPage({ token, onNavigate }: { token: string; on
             </div>
           </section>
 
-          {/* Keuangan & Persembahan */}
-          <section className="dash-card dash-card-amber p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-bold text-slate-800 flex items-center gap-2">
-                <Landmark className="w-5 h-5 text-amber-600" /> Rincian Persembahan Bulan Ini
-              </h2>
-              <ManageBtn tab="offerings" label="Kelola" />
-            </div>
-            {data && data.rincianPersembahan.length === 0 ? (
-              <p className="text-sm text-slate-400">Belum ada persembahan tercatat bulan ini.</p>
-            ) : (
-              <div className="space-y-3">
-                {(data?.rincianPersembahan ?? []).map((r) => (
-                  <div key={r.category} className="flex items-center gap-3">
-                    <span className="w-32 text-sm text-slate-600 shrink-0">{r.category}</span>
-                    <div className="flex-1 dash-bar-track h-2.5">
-                      <div className="dash-bar-fill h-2.5" style={{ width: `${(r.total / maxRincian) * 100}%` }} />
-                    </div>
-                    <span className="w-28 text-right text-sm font-semibold text-slate-800">{formatRupiah(r.total)}</span>
-                  </div>
-                ))}
+          {/* ===== Keuangan & Persembahan ===== */}
+          <SectionTitle>Keuangan &amp; Persembahan</SectionTitle>
+          <section className="grid grid-cols-1 lg:grid-cols-[1.55fr_1fr] gap-6 items-start">
+            <div className="dash-card dash-card-amber p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                  <Landmark className="w-5 h-5 text-amber-600" /> Rincian Persembahan Bulan Ini
+                </h3>
+                <ManageBtn tab="offerings" label="Kelola" />
               </div>
-            )}
+              {data && data.rincianPersembahan.length === 0 ? (
+                <p className="text-sm text-slate-400">Belum ada persembahan tercatat bulan ini.</p>
+              ) : (
+                <div className="space-y-3">
+                  {(data?.rincianPersembahan ?? []).map((r) => (
+                    <div key={r.category} className="flex items-center gap-3">
+                      <span className="w-32 text-sm text-slate-600 shrink-0">{r.category}</span>
+                      <div className="flex-1 dash-bar-track h-2.5">
+                        <div className="dash-bar-fill h-2.5" style={{ width: `${(r.total / maxRincian) * 100}%` }} />
+                      </div>
+                      <span className="w-28 text-right text-sm font-semibold text-slate-800">{formatRupiah(r.total)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="dash-card dash-card-rose p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                  <ClipboardList className="w-5 h-5 text-rose-600" /> Perlu Tindak Lanjut
+                </h3>
+                <ManageBtn tab="followups" label="Kelola" />
+              </div>
+              {data && data.followUps.length === 0 ? (
+                <p className="text-sm text-slate-400">Tidak ada tindak lanjut tertunda.</p>
+              ) : (
+                <ul className="space-y-2">
+                  {(data?.followUps ?? []).map((f) => (
+                    <li key={f.id} className="flex items-center gap-3 text-sm border-b border-slate-100 pb-2 last:border-0">
+                      <span className={`dash-badge ${STATUS_BADGE[f.status] ?? "dash-badge-belum"}`}>{f.status}</span>
+                      <span className="text-slate-800 font-medium flex-1 min-w-0 truncate">{f.title}</span>
+                      {f.dueDate && <span className="text-slate-400 text-xs shrink-0">{formatDate(f.dueDate)}</span>}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </section>
 
-          {/* Pelayanan & Jadwal */}
-          <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* ===== Pelayanan & Jadwal ===== */}
+          <SectionTitle>Pelayanan &amp; Jadwal</SectionTitle>
+          <section className="grid grid-cols-1 lg:grid-cols-[1.55fr_1fr] gap-6 items-start">
             <div className="dash-card dash-card-violet p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                <h3 className="font-bold text-slate-800 flex items-center gap-2">
                   <Users2 className="w-5 h-5 text-violet-600" /> Tim Bertugas
-                </h2>
+                </h3>
                 <ManageBtn tab="schedules" label="Kelola" />
               </div>
               {data && data.timBertugas.length === 0 ? (
@@ -205,9 +239,9 @@ export default function DashboardPage({ token, onNavigate }: { token: string; on
 
             <div className="dash-card dash-card-emerald p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                <h3 className="font-bold text-slate-800 flex items-center gap-2">
                   <CalendarDays className="w-5 h-5 text-emerald-600" /> Agenda Mendatang
-                </h2>
+                </h3>
                 <ManageBtn tab="events" label="Kelola" />
               </div>
               {data && data.agenda.length === 0 ? (
@@ -226,29 +260,6 @@ export default function DashboardPage({ token, onNavigate }: { token: string; on
                 </ul>
               )}
             </div>
-          </section>
-
-          {/* Perlu Tindak Lanjut */}
-          <section className="dash-card dash-card-blue p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-bold text-slate-800 flex items-center gap-2">
-                <ClipboardList className="w-5 h-5 text-blue-600" /> Perlu Tindak Lanjut
-              </h2>
-              <ManageBtn tab="followups" label="Kelola" />
-            </div>
-            {data && data.followUps.length === 0 ? (
-              <p className="text-sm text-slate-400">Tidak ada tindak lanjut tertunda.</p>
-            ) : (
-              <ul className="space-y-2">
-                {(data?.followUps ?? []).map((f) => (
-                  <li key={f.id} className="flex items-center gap-3 text-sm border-b border-slate-100 pb-2 last:border-0">
-                    <span className={`dash-badge ${STATUS_BADGE[f.status] ?? "dash-badge-belum"}`}>{f.status}</span>
-                    <span className="text-slate-800 font-medium flex-1 min-w-0 truncate">{f.title}</span>
-                    {f.dueDate && <span className="text-slate-400 text-xs shrink-0">{formatDate(f.dueDate)}</span>}
-                  </li>
-                ))}
-              </ul>
-            )}
           </section>
         </div>
       )}
