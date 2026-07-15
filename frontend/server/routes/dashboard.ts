@@ -58,10 +58,17 @@ router.get("/", async (req, res) => {
     const trenKehadiran = labels.map((label) => ({ label, value: weekMap.get(label)! }));
     const kehadiranMingguIni = trenKehadiran[trenKehadiran.length - 1]?.value ?? 0;
 
-    // Jadwal pelayanan (terbaru)
+    // Jadwal pelayanan — filter minggu berjalan (Senin→Minggu)
     const schRows = await db.select().from(serviceSchedules).orderBy(desc(serviceSchedules.serviceDate));
-    const latestDate = schRows.length ? String(schRows[0].serviceDate) : null;
-    const timBertugas = schRows.filter((r) => String(r.serviceDate) === latestDate);
+    const nowWeekStart = weekStart(now);
+    const nowWeekEnd = new Date(nowWeekStart.getTime());
+    nowWeekEnd.setUTCDate(nowWeekEnd.getUTCDate() + 6);
+    const wsStr = nowWeekStart.toISOString().slice(0, 10);
+    const weStr = nowWeekEnd.toISOString().slice(0, 10);
+    const timBertugas = schRows.filter((r) => {
+      const d = String(r.serviceDate).slice(0, 10);
+      return d >= wsStr && d <= weStr;
+    });
     const pelayanBertugas = timBertugas.reduce((s, r) => s + num(r.personCount), 0);
 
     // Agenda mendatang
