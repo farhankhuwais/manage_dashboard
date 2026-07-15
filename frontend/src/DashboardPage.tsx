@@ -175,17 +175,23 @@ export default function DashboardPage({ token, onNavigate }: { token: string; on
               {data && data.rincianPersembahan.length === 0 ? (
                 <p className="text-sm text-slate-400">Belum ada persembahan tercatat bulan ini.</p>
               ) : (
-                <div className="space-y-3">
-                  {(data?.rincianPersembahan ?? []).map((r) => (
-                    <div key={r.category} className="flex items-center gap-3">
-                      <span className="w-32 text-sm text-slate-600 shrink-0">{r.category}</span>
-                      <div className="flex-1 dash-bar-track h-2.5">
-                        <div className="dash-bar-fill h-2.5" style={{ width: `${(r.total / maxRincian) * 100}%` }} />
+                <>
+                  <div className="space-y-3">
+                    {(data?.rincianPersembahan ?? []).map((r) => (
+                      <div key={r.category} className="flex items-center gap-3">
+                        <span className="w-36 text-sm text-slate-600 shrink-0">{r.category}</span>
+                        <div className="flex-1 dash-bar-track h-2.5">
+                          <div className="dash-bar-fill h-2.5" style={{ width: `${(r.total / maxRincian) * 100}%` }} />
+                        </div>
+                        <span className="w-28 text-right text-sm font-semibold text-slate-800">{formatRupiah(r.total)}</span>
                       </div>
-                      <span className="w-28 text-right text-sm font-semibold text-slate-800">{formatRupiah(r.total)}</span>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                  <div className="mt-5 pt-4 border-t border-dashed border-slate-200 flex items-center justify-between">
+                    <span className="text-xs text-slate-400">Total bulan berjalan</span>
+                    <span className="text-lg font-extrabold text-slate-800">{formatRupiah(data?.kpi.persembahanBulanIni ?? 0)}</span>
+                  </div>
+                </>
               )}
             </div>
 
