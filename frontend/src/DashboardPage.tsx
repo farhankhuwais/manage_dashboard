@@ -254,9 +254,9 @@ export default function DashboardPage({ token, onNavigate }: { token: string; on
                 <ul className="space-y-1">
                   {(data?.agenda ?? []).slice(0, 5).map((e) => (
                     <li key={e.id} className="flex items-center gap-3.5 py-2.5 border-b border-slate-100 last:border-0">
-                      <div className="shrink-0 w-14 flex flex-col items-center justify-center rounded-xl bg-slate-800 text-white px-2 py-2">
+                      <div className="shrink-0 w-14 flex flex-col items-center justify-center rounded-xl bg-blue-50 border border-blue-100 text-blue-700 px-2 py-2">
                         <span className="text-lg font-extrabold leading-none">{eventDay(e.eventDate)}</span>
-                        <span className="text-[9px] uppercase tracking-wide mt-1 text-slate-300">{eventMonth(e.eventDate)}</span>
+                        <span className="text-[9px] uppercase tracking-wide mt-1 text-blue-400">{eventMonth(e.eventDate)}</span>
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-slate-800 truncate">{e.title}</p>
