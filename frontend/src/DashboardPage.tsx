@@ -104,8 +104,8 @@ export default function DashboardPage({ token, onNavigate }: { token: string; on
           <Church className="w-6 h-6 text-white" />
         </div>
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-800 leading-tight">Beranda Gereja</h1>
-          <p className="text-sm text-slate-500">Pusat informasi pelayanan &amp; kehidupan jemaat</p>
+          <h1 className="text-2xl font-extrabold text-slate-800 leading-tight">Dashboard Data Jemaat</h1>
+          <p className="text-sm text-slate-500">Gereja &middot; Ringkasan Minggu Berjalan &middot; diperbarui manual tiap Senin</p>
         </div>
       </div>
 
