@@ -234,11 +234,16 @@ export default function DashboardPage({ token, onNavigate }: { token: string; on
               {data && data.timBertugas.length === 0 ? (
                 <p className="text-sm text-slate-400">Belum ada jadwal pelayanan.</p>
               ) : (
-                <ul className="space-y-2">
+                <ul className="space-y-1">
                   {(data?.timBertugas ?? []).map((t) => (
-                    <li key={t.id} className="flex items-center justify-between text-sm border-b border-slate-100 pb-2 last:border-0">
-                      <span className="font-medium text-slate-800">{t.teamName}</span>
-                      <span className="text-slate-400 text-xs">{t.personCount} orang{t.detail ? ` · ${t.detail}` : ""}</span>
+                    <li key={t.id} className="flex items-center justify-between gap-3 py-2.5 border-b border-slate-100 last:border-0">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-slate-800 truncate">{t.teamName}</p>
+                        {t.detail && <p className="text-xs text-slate-400 truncate">{t.detail}</p>}
+                      </div>
+                      <span className="shrink-0 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-violet-50 text-violet-700 border border-violet-100">
+                        {t.personCount} orang
+                      </span>
                     </li>
                   ))}
                 </ul>
