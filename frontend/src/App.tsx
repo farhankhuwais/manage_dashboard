@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Users, ReceiptText, LogOut, LayoutDashboard, Menu, X, Trash2, ShieldCheck, Landmark, Search, Home, Users2, Heart, CalendarCheck, CalendarDays, ClipboardList, FileSpreadsheet, FileText, FileUp, Download } from 'lucide-react';
 import DuesPage from './DuesPage';
 import LoginPage from './LoginPage';
@@ -457,7 +457,7 @@ function MembersPage({ token }: { token: string }) {
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
         doc.setTextColor(100, 116, 139);
-        doc.text(`Diekspor: ${today}   â€¢   ${filtered.length} data`, ml, 46);
+        doc.text(`Diekspor: ${today}   •   ${filtered.length} data`, ml, 46);
         doc.setFontSize(8);
         doc.setTextColor(148, 163, 184);
         doc.text(`Halaman ${data.pageNumber}`, pw - mr, ph - 22, { align: 'right' });
@@ -510,7 +510,7 @@ function MembersPage({ token }: { token: string }) {
           else obj[key] = v;
         }
         const cells: Record<string, string> = { name, status, ...obj };
-        if (!name) issues.push("Nama kosong â€” baris dilewati");
+        if (!name) issues.push("Nama kosong - baris dilewati");
         for (const f of DATE_KEYS) {
           const v = obj[f];
           if (v && !isValidDate(v)) {
@@ -686,7 +686,7 @@ function MembersPage({ token }: { token: string }) {
                     <div key={f.key}>
                       <label className="block text-xs font-medium text-slate-500 mb-1">{f.label}</label>
                       <select value={info[f.key] ?? ""} onChange={(e) => setField(f.key, e.target.value)} className={inputCls}>
-                        <option value="">â€”</option>
+                        <option value="">Pilih...</option>
                         {f.options.map((o) => (
                           <option key={o} value={o}>{o}</option>
                         ))}
@@ -795,7 +795,7 @@ function MembersPage({ token }: { token: string }) {
                     onClick={() => setImportPreview(null)}
                     className="text-slate-400 hover:text-slate-700 text-xl leading-none"
                   >
-                    âœ•
+                    X
                   </button>
                 </div>
 
