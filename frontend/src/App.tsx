@@ -568,7 +568,8 @@ function MembersPage({ token }: { token: string }) {
     });
 
     const ROWS = 10;
-    const example = new Date();
+    const _n = new Date();
+    const example = new Date(_n.getFullYear(), _n.getMonth(), _n.getDate()); // tanpa jam
     const body = Array.from({ length: ROWS }, (_, r) =>
       header.map((_, c) => (r === 0 && dateCols.has(c) ? example : '')),
     );
