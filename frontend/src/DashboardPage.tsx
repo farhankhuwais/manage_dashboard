@@ -207,13 +207,13 @@ export default function DashboardPage({ token, onNavigate }: { token: string; on
                     <li key={f.id} className="flex items-center justify-between gap-3 py-2.5 border-b border-slate-100 last:border-0">
                       <div className="min-w-0">
                         <p className="font-semibold text-slate-800 truncate">{f.title}</p>
-                        {f.people && <p className="text-xs text-slate-400 truncate">{f.people}</p>}
+                        {f.category && <p className="text-xs text-slate-400 truncate">{f.category}</p>}
                       </div>
-                      <span className={`shrink-0 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${
-                        f.status === "Selesai" ? "bg-slate-50 text-slate-500 border-slate-200" : f.status === "Proses" ? "bg-blue-50 text-blue-700 border-blue-100" : "bg-rose-50 text-rose-700 border-rose-100"
-                      }`}>
-                        {f.status}
-                      </span>
+                      {f.people && (
+                        <span className="shrink-0 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-100">
+                          {f.people}
+                        </span>
+                      )}
                     </li>
                   ))}
                 </ul>
