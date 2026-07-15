@@ -29,6 +29,10 @@ const STATUS_BADGE: Record<string, string> = {
   Selesai: "dash-badge-selesai",
 };
 
+const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+const eventDay = (iso: string) => Number(String(iso).slice(8, 10)) || "";
+const eventMonth = (iso: string) => MONTHS_SHORT[Number(String(iso).slice(5, 7)) - 1] ?? "";
+
 function TrendChart({ data }: { data: { label: string; value: number }[] }) {
   const W = 520, H = 130, P = 24;
   const max = Math.max(1, ...data.map((d) => d.value));
@@ -247,14 +251,19 @@ export default function DashboardPage({ token, onNavigate }: { token: string; on
               {data && data.agenda.length === 0 ? (
                 <p className="text-sm text-slate-400">Tidak ada agenda ke depan.</p>
               ) : (
-                <ul className="space-y-2">
+                <ul className="space-y-1">
                   {(data?.agenda ?? []).slice(0, 5).map((e) => (
-                    <li key={e.id} className="flex items-center gap-3 text-sm border-b border-slate-100 pb-2 last:border-0">
-                      <span className="text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-1 rounded-lg shrink-0 w-20 text-center">
-                        {formatDateShort(e.eventDate)}
-                      </span>
-                      <span className="text-slate-800 font-medium">{e.title}</span>
-                      {e.location && <span className="text-slate-400 text-xs ml-auto truncate">{e.location}</span>}
+                    <li key={e.id} className="flex items-center gap-3.5 py-2.5 border-b border-slate-100 last:border-0">
+                      <div className="shrink-0 w-14 flex flex-col items-center justify-center rounded-xl bg-slate-800 text-white px-2 py-2">
+                        <span className="text-lg font-extrabold leading-none">{eventDay(e.eventDate)}</span>
+                        <span className="text-[9px] uppercase tracking-wide mt-1 text-slate-300">{eventMonth(e.eventDate)}</span>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-slate-800 truncate">{e.title}</p>
+                        <p className="text-xs text-slate-400 truncate">
+                          {[e.time, e.location].filter(Boolean).join(" · ") || "-"}
+                        </p>
+                      </div>
                     </li>
                   ))}
                 </ul>
