@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Users, ReceiptText, LogOut, LayoutDashboard, Menu, X, Trash2, ShieldCheck, Landmark, Search, Home, Users2, Heart, CalendarCheck, CalendarDays, ClipboardList, FileSpreadsheet, FileText, FileUp, Download } from 'lucide-react';
+import { Users, ReceiptText, LogOut, LayoutDashboard, Menu, X, Trash2, ShieldCheck, Landmark, Search, Home, Users2, Heart, CalendarCheck, CalendarDays, CalendarRange, ClipboardList, FileSpreadsheet, FileText, FileUp, Download } from 'lucide-react';
 import DuesPage from './DuesPage';
 import LoginPage from './LoginPage';
 import UsersPage from './UsersPage';
@@ -9,6 +9,7 @@ import AttendancePage from './AttendancePage';
 import SchedulesPage from './SchedulesPage';
 import EventsPage from './EventsPage';
 import FollowUpsPage from './FollowUpsPage';
+import CalendarPage from './CalendarPage';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -1014,7 +1015,7 @@ function MembersPage({ token }: { token: string }) {
 
 function App() {
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'members' | 'attendance' | 'schedules' | 'events' | 'followups' | 'dues' | 'users' | 'offerings'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'members' | 'calendar' | 'attendance' | 'schedules' | 'events' | 'followups' | 'dues' | 'users' | 'offerings'>('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Helper to get role from token
@@ -1119,6 +1120,18 @@ function App() {
           </button>
 
           <button
+            onClick={() => { setActiveTab('calendar'); setIsMobileMenuOpen(false); }}
+            className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 ${
+              activeTab === 'calendar'
+                ? 'bg-blue-600/10 text-blue-400 font-semibold'
+                : 'hover:bg-slate-800 hover:text-white'
+            }`}
+          >
+            <CalendarRange className={`w-5 h-5 ${activeTab === 'calendar' ? 'text-blue-500' : ''}`} />
+            Kalender
+          </button>
+
+          <button
             onClick={() => { setActiveTab('schedules'); setIsMobileMenuOpen(false); }}
             className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 ${
               activeTab === 'schedules'
@@ -1208,7 +1221,7 @@ function App() {
       <main className="flex-1 overflow-y-auto h-screen relative">
         <div className="max-w-6xl mx-auto p-4 md:p-8 lg:p-12">
           
-          {activeTab !== 'dashboard' && (
+          {activeTab !== 'dashboard' && activeTab !== 'calendar' && (
             <header className="mb-10 hidden md:block">
               <h2 className="text-3xl font-bold text-slate-900 tracking-tight">
                 {activeTab === 'members' && 'Manajemen Jemaat'}
@@ -1229,6 +1242,7 @@ function App() {
           <div className="relative">
             {activeTab === 'dashboard' && <DashboardPage token={token} onNavigate={(t) => setActiveTab(t as typeof activeTab)} />}
             {activeTab === 'members' && <MembersPage token={token} />}
+            {activeTab === 'calendar' && <CalendarPage token={token} onNavigate={(t) => setActiveTab(t as typeof activeTab)} />}
             {activeTab === 'attendance' && <AttendancePage token={token} />}
             {activeTab === 'schedules' && <SchedulesPage token={token} />}
             {activeTab === 'events' && <EventsPage token={token} />}
