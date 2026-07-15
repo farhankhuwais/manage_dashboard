@@ -3,7 +3,7 @@ import {
   Users, Church, CalendarCheck, Landmark, Users2, ArrowRight,
   CalendarDays, ClipboardList, TrendingUp,
 } from "lucide-react";
-import { formatRupiahShort, formatRupiah, formatDate, formatDateShort } from "./lib/format";
+import { formatRupiahShort, formatRupiah, formatDateShort } from "./lib/format";
 import "./Dashboard.css";
 
 interface DashboardData {
@@ -22,12 +22,6 @@ const KPI_CARDS = [
   { key: "persembahanBulanIni", label: "Persembahan Bulan Ini", icon: Landmark, grad: "from-amber-500 to-orange-600", tab: "offerings" as const, money: true },
   { key: "pelayanBertugas", label: "Pelayan Bertugas", icon: Users2, grad: "from-violet-500 to-purple-600", tab: "schedules" as const },
 ];
-
-const STATUS_BADGE: Record<string, string> = {
-  Belum: "dash-badge-belum",
-  Proses: "dash-badge-proses",
-  Selesai: "dash-badge-selesai",
-};
 
 const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
 const eventDay = (iso: string) => Number(String(iso).slice(8, 10)) || "";
@@ -196,21 +190,30 @@ export default function DashboardPage({ token, onNavigate }: { token: string; on
             </div>
 
             <div className="dash-card dash-card-rose p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                  <ClipboardList className="w-5 h-5 text-rose-600" /> Perlu Tindak Lanjut
-                </h3>
-                <ManageBtn tab="followups" label="Kelola" />
+              <div className="mb-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                    <ClipboardList className="w-5 h-5 text-rose-600" /> Perlu Tindak Lanjut
+                  </h3>
+                  <ManageBtn tab="followups" label="Kelola" />
+                </div>
+                <p className="text-xs text-slate-400 mt-0.5">Ringkasan otomatis dari data keanggotaan</p>
               </div>
               {data && data.followUps.length === 0 ? (
                 <p className="text-sm text-slate-400">Tidak ada tindak lanjut tertunda.</p>
               ) : (
-                <ul className="space-y-2">
+                <ul className="space-y-1">
                   {(data?.followUps ?? []).map((f) => (
-                    <li key={f.id} className="flex items-center gap-3 text-sm border-b border-slate-100 pb-2 last:border-0">
-                      <span className={`dash-badge ${STATUS_BADGE[f.status] ?? "dash-badge-belum"}`}>{f.status}</span>
-                      <span className="text-slate-800 font-medium flex-1 min-w-0 truncate">{f.title}</span>
-                      {f.dueDate && <span className="text-slate-400 text-xs shrink-0">{formatDate(f.dueDate)}</span>}
+                    <li key={f.id} className="flex items-center justify-between gap-3 py-2.5 border-b border-slate-100 last:border-0">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-slate-800 truncate">{f.title}</p>
+                        {f.people && <p className="text-xs text-slate-400 truncate">{f.people}</p>}
+                      </div>
+                      <span className={`shrink-0 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${
+                        f.status === "Selesai" ? "bg-slate-50 text-slate-500 border-slate-200" : f.status === "Proses" ? "bg-blue-50 text-blue-700 border-blue-100" : "bg-rose-50 text-rose-700 border-rose-100"
+                      }`}>
+                        {f.status}
+                      </span>
                     </li>
                   ))}
                 </ul>
