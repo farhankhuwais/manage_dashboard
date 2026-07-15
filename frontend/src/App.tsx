@@ -560,7 +560,8 @@ function MembersPage({ token }: { token: string }) {
   };
 
   const downloadTemplate = () => {
-    const header = ['No', ...TABLE_COLUMNS.map((c) => c.label)];
+    // Kolom "No" sengaja tidak disertakan — nomor urut mengikuti data (id DB), jadi tidak bentrok.
+    const header = TABLE_COLUMNS.map((c) => c.label);
     const dateCols = new Set<number>();
     header.forEach((label, idx) => {
       const key = LABEL_TO_KEY[label];
