@@ -58,6 +58,7 @@ function TrendChart({ data }: { data: { label: string; value: number }[] }) {
 export default function DashboardPage({ token, onNavigate }: { token: string; onNavigate: (t: string) => void }) {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const now = new Date();
 
   const fetchDashboard = async () => {
     try {
@@ -221,11 +222,14 @@ export default function DashboardPage({ token, onNavigate }: { token: string; on
           <SectionTitle>Pelayanan &amp; Jadwal</SectionTitle>
           <section className="grid grid-cols-1 lg:grid-cols-[1.55fr_1fr] gap-6 items-start">
             <div className="dash-card dash-card-violet p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                  <Users2 className="w-5 h-5 text-violet-600" /> Tim Bertugas
-                </h3>
-                <ManageBtn tab="schedules" label="Kelola" />
+              <div className="mb-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                    <Users2 className="w-5 h-5 text-violet-600" /> Tim Bertugas — Minggu Ini
+                  </h3>
+                  <ManageBtn tab="schedules" label="Kelola" />
+                </div>
+                <p className="text-xs text-slate-400 mt-0.5">{now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</p>
               </div>
               {data && data.timBertugas.length === 0 ? (
                 <p className="text-sm text-slate-400">Belum ada jadwal pelayanan.</p>
