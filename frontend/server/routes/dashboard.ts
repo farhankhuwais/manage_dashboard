@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "../db/index";
-import { members, offerings, attendance, serviceSchedules, events, followUps } from "../db/schema";
+import { members, offerings, attendance, serviceSchedules, events, followUps, weeklyDues } from "../db/schema";
 import { sql, eq, desc } from "drizzle-orm";
 
 const router = Router();
@@ -45,6 +45,20 @@ router.get("/", async (req, res) => {
       .select({ total: sql`coalesce(sum(${offerings.amount}),0)` })
       .from(offerings)
       .where(wherePrevMonth);
+
+    // Pencatatan persembahan (weekly_dues) — bulan ini & bulan lalu
+    const whereDuesMonth = sql`extract(year from ${weeklyDues.date}) = ${year} AND extract(month from ${weeklyDues.date}) = ${month}`;
+    const [duesRow] = await db
+      .select({ total: sql`coalesce(sum(${weeklyDues.amount}),0)` })
+      .from(weeklyDues)
+      .where(whereDuesMonth);
+    const duesMonth = num(duesRow?.total);
+    const whereDuesPrev = sql`extract(year from ${weeklyDues.date}) = ${pmy} AND extract(month from ${weeklyDues.date}) = ${pm}`;
+    const [duesPrevRow] = await db
+      .select({ total: sql`coalesce(sum(${weeklyDues.amount}),0)` })
+      .from(weeklyDues)
+      .where(whereDuesPrev);
+    const duesPrev = num(duesPrevRow?.total);
     const rincian = await db
       .select({ category: offerings.category, total: sql`coalesce(sum(${offerings.amount}),0)` })
       .from(offerings)
@@ -113,9 +127,13 @@ router.get("/", async (req, res) => {
       if (idx >= 0) demografi[idx].value++;
     }
 
-    // Info tambahan KPI
-    const persNow = num(persembahanRow?.total);
-    const prevPers = num(prevPersRow?.total);
+    // Gabungan rincian: offerings per kategori + pencatatan persembahan (weekly_dues)
+    const rincianPersembahan = rincian.map((r) => ({ category: r.category, total: num(r.total) }));
+    if (duesMonth > 0) rincianPersembahan.push({ category: "Persembahan", total: duesMonth });
+
+    // Info tambahan KPI (offerings + dues)
+    const persNow = num(persembahanRow?.total) + duesMonth;
+    const prevPers = num(prevPersRow?.total) + duesPrev;
     const kehLast = trenKehadiran[trenKehadiran.length - 1]?.value ?? 0;
     const kehPrev = trenKehadiran[trenKehadiran.length - 2]?.value ?? 0;
     const pctDelta = (cur: number, prev: number) =>
@@ -135,13 +153,13 @@ router.get("/", async (req, res) => {
       kpi: {
         jemaatAktif: num(aktifRow?.count),
         kehadiranMingguIni,
-        persembahanBulanIni: num(persembahanRow?.total),
+        persembahanBulanIni: persNow,
         pelayanBertugas,
       },
       kpiSub,
       trenKehadiran,
       demografi,
-      rincianPersembahan: rincian.map((r) => ({ category: r.category, total: num(r.total) })),
+      rincianPersembahan,
       timBertugas,
       agenda,
       followUps: followUpRows,
