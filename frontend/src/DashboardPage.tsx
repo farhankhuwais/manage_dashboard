@@ -23,7 +23,9 @@ const KPI_CARDS = [
   { key: "pelayanBertugas", label: "Pelayan Bertugas", icon: Users2, grad: "from-violet-500 to-purple-600", tab: "schedules" as const },
 ];
 
+const MONTHS = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+const RINCIAN_BAR_MAX = 100_000_000; // skala bar tetap: 100jt
 const eventDay = (iso: string) => Number(String(iso).slice(8, 10)) || "";
 const eventMonth = (iso: string) => MONTHS_SHORT[Number(String(iso).slice(5, 7)) - 1] ?? "";
 
@@ -85,7 +87,6 @@ export default function DashboardPage({ token, onNavigate }: { token: string; on
     </div>
   );
 
-  const maxRincian = Math.max(1, ...(data?.rincianPersembahan.map((r) => r.total) ?? [1]));
   const maxDemo = Math.max(1, ...(data?.demografi.map((d) => d.value) ?? [1]));
   const totalDemo = (data?.demografi.reduce((s, d) => s + d.value, 0) || 0);
 
@@ -166,24 +167,29 @@ export default function DashboardPage({ token, onNavigate }: { token: string; on
           <SectionTitle>Keuangan &amp; Persembahan</SectionTitle>
           <section className="grid grid-cols-1 lg:grid-cols-[1.55fr_1fr] gap-6 items-start">
             <div className="dash-card dash-card-amber p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                  <Landmark className="w-5 h-5 text-amber-600" /> Rincian Persembahan Bulan Ini
-                </h3>
-                <ManageBtn tab="offerings" label="Kelola" />
-              </div>
+                <div className="mb-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                      <Landmark className="w-5 h-5 text-amber-600" /> Rincian Persembahan — {MONTHS[now.getMonth()]} {now.getFullYear()}
+                    </h3>
+                    <ManageBtn tab="offerings" label="Kelola" />
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">Berdasarkan kategori</p>
+                </div>
               {data && data.rincianPersembahan.length === 0 ? (
                 <p className="text-sm text-slate-400">Belum ada persembahan tercatat bulan ini.</p>
               ) : (
                 <>
                   <div className="space-y-3">
                     {(data?.rincianPersembahan ?? []).map((r) => (
-                      <div key={r.category} className="flex items-center gap-3">
-                        <span className="w-36 text-sm text-slate-600 shrink-0">{r.category}</span>
-                        <div className="flex-1 dash-bar-track h-2.5">
-                          <div className="dash-bar-fill h-2.5" style={{ width: `${(r.total / maxRincian) * 100}%` }} />
+                      <div key={r.category}>
+                        <div className="flex items-center justify-between text-sm mb-1.5">
+                          <span className="text-slate-600 truncate pr-2">{r.category}</span>
+                          <span className="font-semibold text-slate-800 shrink-0">{formatRupiah(r.total)}</span>
                         </div>
-                        <span className="w-28 text-right text-sm font-semibold text-slate-800">{formatRupiah(r.total)}</span>
+                        <div className="dash-bar-track h-3">
+                          <div className="dash-bar-fill h-3" style={{ width: `${Math.min(100, (r.total / RINCIAN_BAR_MAX) * 100)}%` }} />
+                        </div>
                       </div>
                     ))}
                   </div>
