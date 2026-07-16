@@ -52,7 +52,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
           </div>
           
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white tracking-tight">E-Gereja</h1>
+            <h1 className="text-3xl font-bold text-white tracking-tight">GKMI Karunia</h1>
             <p className="text-blue-200 mt-2 text-sm">Dashboard Manajemen Keuangan & Jemaat</p>
           </div>
 

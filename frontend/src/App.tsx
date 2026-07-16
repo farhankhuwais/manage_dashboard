@@ -1083,7 +1083,7 @@ function App() {
       
       {/* Mobile Header */}
       <div className="md:hidden bg-white border-b p-4 flex justify-between items-center sticky top-0 z-20 shadow-sm">
-        <div className="font-bold text-xl text-blue-900 tracking-tight">E-Gereja</div>
+        <div className="font-bold text-xl text-blue-900 tracking-tight">GKMI Karunia</div>
         <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 bg-slate-100 rounded-lg">
           {isMobileMenuOpen ? <X className="w-5 h-5 text-slate-600" /> : <Menu className="w-5 h-5 text-slate-600" />}
         </button>
@@ -1100,14 +1100,14 @@ function App() {
       `}>
         <div className="p-8 hidden md:block">
           <h1 className="text-3xl font-extrabold text-white tracking-tighter">
-            E-Gereja<span className="text-blue-500">.</span>
+            GKMI Karunia<span className="text-blue-500">.</span>
           </h1>
           <p className="text-slate-400 text-sm mt-2">Dashboard Management</p>
         </div>
 
         {/* Mobile sidebar header (own bar so nav clears the page header) */}
         <div className="md:hidden flex items-center justify-between p-4 border-b border-slate-800">
-          <span className="font-bold text-lg text-white tracking-tight">E-Gereja</span>
+          <span className="font-bold text-lg text-white tracking-tight">GKMI Karunia</span>
           <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 bg-slate-800 rounded-lg" aria-label="Tutup menu">
             <X className="w-5 h-5 text-slate-300" />
           </button>
